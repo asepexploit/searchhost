@@ -147,6 +147,33 @@
         pertama kali diaktifkan TIDAK ikut dihitung (dianggap sudah lewat) -- cuma file
         baru sejak toggle diaktifkan yang dihitung.
       </div>
+
+      <hr>
+
+      <div class="form-check form-switch mb-2">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="auto-parser-append-toggle"
+          name="append_enabled"
+          value="1"
+          {{ 'checked' if auto_parser_append_enabled else '' }}
+        >
+        <label class="form-check-label" for="auto-parser-append-toggle">
+          Gabung ke 1 file sampai penuh -- {{ 'Aktif' if auto_parser_append_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="col-12 col-md-6 mb-2">
+        <label class="form-label small text-muted mb-1">Maks baris per file</label>
+        <input type="number" class="form-control" name="max_lines" min="1" value="{{ auto_parser_max_lines }}">
+      </div>
+      <div class="form-text mb-3">
+        Kalau OFF (default), tiap batch selalu bikin file <code>.txt</code> baru sendiri.
+        Kalau ON, hasil batch digabung (append) ke file yang sama sampai jumlah barisnya
+        nyentuh batas di atas (mis. 5000 atau 10000) -- baru setelah itu bikin file baru.
+        Batasnya kira-kira (gak dipotong di tengah batch), bukan batas byte-perfect.
+      </div>
       <button type="submit" class="btn btn-primary">
         <i class="bi bi-save"></i> Simpan Pengaturan
       </button>
