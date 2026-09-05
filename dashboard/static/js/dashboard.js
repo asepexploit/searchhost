@@ -5,6 +5,12 @@
     return (bytes / 1024 / 1024).toFixed(2) + " MB";
   }
 
+  function fmtSpeed(bytesPerSec) {
+    if (!bytesPerSec || bytesPerSec <= 0) return null;
+    if (bytesPerSec < 1024 * 1024) return (bytesPerSec / 1024).toFixed(0) + " KB/s";
+    return (bytesPerSec / 1024 / 1024).toFixed(1) + " MB/s";
+  }
+
   function fmtTime(iso) {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
@@ -152,7 +158,9 @@
       <div class="active-download-item" data-progress-id="${p.progress_id}">
         <div class="d-flex justify-content-between small mb-1">
           <span><i class="bi bi-file-earmark-arrow-down me-1 text-primary"></i>${p.filename}</span>
-          <span class="text-muted">${p.percent}%${p.total ? " &middot; " + fmtSize(p.total) : ""}</span>
+          <span class="text-muted">
+            ${p.percent}%${p.total ? " &middot; " + fmtSize(p.total) : ""}${fmtSpeed(p._speed) ? " &middot; " + fmtSpeed(p._speed) : ""}
+          </span>
         </div>
         <div class="progress" style="height:6px;">
           <div class="progress-bar" role="progressbar" style="width:${p.percent}%"></div>
@@ -164,6 +172,23 @@
   }
 
   function handleProgress(item) {
+    // Kecepatan dihitung di sini (murni dari data progress yang SUDAH ada -- current
+    // bytes antar-tick -- bukan probe jaringan baru), jadi gak nambah beban apa pun.
+    // Di-smooth (exponential moving average) biar gak lompat-lompat antar-tick.
+    const prev = activeDownloads.get(item.progress_id);
+    const now = performance.now();
+    if (prev && typeof prev._ts === "number") {
+      const deltaBytes = item.current - prev.current;
+      const deltaSec = (now - prev._ts) / 1000;
+      if (deltaBytes > 0 && deltaSec > 0.05) {
+        const instantRate = deltaBytes / deltaSec;
+        const prevSmoothed = prev._speed || instantRate;
+        item._speed = prevSmoothed * 0.7 + instantRate * 0.3;
+      } else {
+        item._speed = prev._speed;
+      }
+    }
+    item._ts = now;
     activeDownloads.set(item.progress_id, item);
     renderActiveDownloads();
   }
