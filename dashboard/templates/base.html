@@ -42,6 +42,20 @@
           <span class="nav-icon"><i class="bi bi-filter-square-fill"></i></span> <span>Text Parser/Extractor</span>
         </a>
 
+        <div class="nav-section">Hosting Checker</div>
+        <a class="nav-link {{ 'active' if request.url.path == '/hosting-checker' else '' }}" href="/hosting-checker">
+          <span class="nav-icon"><i class="bi bi-activity"></i></span> <span>Status Live</span>
+        </a>
+        <a class="nav-link {{ 'active' if request.url.path == '/hosting-checker/success' else '' }}" href="/hosting-checker/success">
+          <span class="nav-icon"><i class="bi bi-trophy-fill"></i></span> <span>Hasil Sukses</span>
+        </a>
+        <a class="nav-link {{ 'active' if request.url.path == '/hosting-checker/list' else '' }}" href="/hosting-checker/list">
+          <span class="nav-icon"><i class="bi bi-hdd-network-fill"></i></span> <span>List Hosting</span>
+        </a>
+        <a class="nav-link {{ 'active' if request.url.path == '/hosting-checker/banned' else '' }}" href="/hosting-checker/banned">
+          <span class="nav-icon"><i class="bi bi-slash-circle-fill"></i></span> <span>Banned Domain</span>
+        </a>
+
         <div class="nav-section">Konfigurasi</div>
         <a class="nav-link {{ 'active' if request.url.path == '/sources' else '' }}" href="/sources">
           <span class="nav-icon"><i class="bi bi-broadcast"></i></span> <span>Sumber Channel</span>

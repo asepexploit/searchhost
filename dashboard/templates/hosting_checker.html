@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block page_title %}Hosting Checker{% endblock %}
+{% block page_subtitle %}Status live proses login-checker WHMCS (ngehostutama/app.py){% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-primary);">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-list-check"></i></div>
+      <div>
+        <div class="stat-value" id="hc-total">{{ status.total_targets }}</div>
+        <div class="stat-label">Total Target</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-info);">
+      <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-hourglass-split"></i></div>
+      <div>
+        <div class="stat-value" id="hc-checked">{{ status.checked }}</div>
+        <div class="stat-label">Sudah Dicek</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-success);">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i></div>
+      <div>
+        <div class="stat-value" id="hc-success">{{ status.success }}</div>
+        <div class="stat-label">Sukses (SS)</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-warning);">
+      <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-slash-circle-fill"></i></div>
+      <div>
+        <div class="stat-value" id="hc-banned">{{ status.banned_skipped }}</div>
+        <div class="stat-label">Di-skip (Banned)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span><i class="bi bi-activity me-2 text-primary"></i>Status Proses</span>
+    <span class="badge {{ 'text-bg-success' if status.running else 'text-bg-secondary' }}" id="hc-running-badge">
+      {{ 'Berjalan' if status.running else 'Tidak Aktif' }}
+    </span>
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-2">
+      Data ini dipoll dari <code>ngehostutama/status.json</code> tiap beberapa detik --
+      kalau prosesnya tidak sedang dijalankan (mis. belum pernah <code>python app.py</code>
+      dari folder <code>ngehostutama</code>), status di atas menampilkan angka terakhir
+      sebelum berhenti.
+    </p>
+    <p class="mb-0">
+      Sedang mengecek: <strong id="hc-current-target">{{ status.current_target or '-' }}</strong>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  async function poll() {
+    try {
+      const res = await fetch('/api/hosting-checker/status');
+      if (!res.ok) return;
+      const s = await res.json();
+      document.getElementById('hc-total').textContent = s.total_targets;
+      document.getElementById('hc-checked').textContent = s.checked;
+      document.getElementById('hc-success').textContent = s.success;
+      document.getElementById('hc-banned').textContent = s.banned_skipped;
+      document.getElementById('hc-current-target').textContent = s.current_target || '-';
+      const badge = document.getElementById('hc-running-badge');
+      badge.textContent = s.running ? 'Berjalan' : 'Tidak Aktif';
+      badge.className = 'badge ' + (s.running ? 'text-bg-success' : 'text-bg-secondary');
+    } catch (e) {
+      // Diam saja -- polling berikutnya coba lagi.
+    }
+  }
+  poll();
+  setInterval(poll, 3000);
+})();
+</script>
+{% endblock %}

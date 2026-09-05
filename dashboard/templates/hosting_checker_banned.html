@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block page_title %}Banned Domain{% endblock %}
+{% block page_subtitle %}Domain yang langsung di-skip checker tanpa pernah dibuka browsernya{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">
+    <span><i class="bi bi-slash-circle-fill me-2 text-danger"></i>Tambah Domain Banned</span>
+  </div>
+  <div class="card-body">
+    <form class="row g-2" method="post" action="/hosting-checker/banned/add">
+      <div class="col-12 col-md-8">
+        <input
+          type="text"
+          class="form-control"
+          name="domain"
+          placeholder="contoh: changeip.com"
+          required
+        >
+        <div class="form-text">
+          Domain ini beserta semua subdomainnya (mis. <code>abc.changeip.com</code>) akan
+          langsung dilewati checker -- tidak pernah dibuka browsernya sama sekali.
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-plus-lg"></i> Tambah
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span><i class="bi bi-slash-circle-fill me-2 text-danger"></i>Domain Banned</span>
+    <span class="badge text-bg-secondary">{{ domains|length }} domain</span>
+  </div>
+  <ul class="list-group list-group-flush">
+    {% for d in domains %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <span class="d-flex align-items-center gap-2">
+        <span class="file-icon"><i class="bi bi-slash-circle"></i></span>
+        <code>{{ d }}</code>
+      </span>
+      <form method="post" action="/hosting-checker/banned/delete" class="mb-0">
+        <input type="hidden" name="domain" value="{{ d }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus dari daftar banned">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </form>
+    </li>
+    {% else %}
+    <li class="list-group-item">
+      <div class="empty-state py-3">
+        <span class="empty-state-icon"><i class="bi bi-slash-circle"></i></span>
+        <p>Belum ada domain banned.</p>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

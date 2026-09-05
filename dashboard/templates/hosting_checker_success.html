@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block page_title %}Hasil Sukses{% endblock %}
+{% block page_subtitle %}Akun yang berhasil login, lengkap dengan screenshot (folder SS/SSIAPA){% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span><i class="bi bi-trophy-fill me-2 text-success"></i>Akun Sukses</span>
+    <span class="badge text-bg-secondary">{{ results|length }} akun</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:90px;">Screenshot</th>
+          <th>URL</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Folder</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if results|length == 0 %}
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-trophy"></i></span>
+              <p>Belum ada akun sukses tersimpan.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for r in results %}
+        <tr>
+          <td>
+            {% if r.screenshot_url %}
+            <a href="{{ r.screenshot_url }}" target="_blank" rel="noopener noreferrer">
+              <img src="{{ r.screenshot_url }}" alt="screenshot" style="width:64px;height:auto;border-radius:6px;border:1px solid var(--tg-border);">
+            </a>
+            {% else %}
+            <span class="text-muted small">-</span>
+            {% endif %}
+          </td>
+          <td><a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.url }}</a></td>
+          <td>{{ r.username }}</td>
+          <td><code>{{ r.password }}</code></td>
+          <td><span class="badge text-bg-light">{{ r.dir }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

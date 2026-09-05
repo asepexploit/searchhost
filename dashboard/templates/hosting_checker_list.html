@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block page_title %}List Hosting{% endblock %}
+{% block page_subtitle %}URL WHMCS yang ditemukan checker (list-hosting.txt){% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span><i class="bi bi-hdd-network-fill me-2 text-primary"></i>{{ hosting_list_file }}</span>
+    <span class="badge text-bg-secondary">{{ urls|length }} URL</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:60px;">#</th>
+          <th>URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if urls|length == 0 %}
+        <tr>
+          <td colspan="2">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-hdd-network"></i></span>
+              <p>Belum ada URL hosting yang tercatat.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for u in urls %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td><a href="{{ u }}" target="_blank" rel="noopener noreferrer">{{ u }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
