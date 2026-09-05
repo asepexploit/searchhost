@@ -546,6 +546,14 @@ code {
   margin-top: .15rem;
 }
 
+.stat-hint {
+  font-size: .68rem;
+  color: var(--tg-text-muted);
+  opacity: .75;
+  margin-top: .2rem;
+  line-height: 1.3;
+}
+
 /* ============================================================
    Table
    ============================================================ */
