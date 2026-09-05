@@ -158,12 +158,16 @@
       <div class="active-download-item" data-progress-id="${p.progress_id}">
         <div class="d-flex justify-content-between small mb-1">
           <span><i class="bi bi-file-earmark-arrow-down me-1 text-primary"></i>${p.filename}</span>
-          <span class="text-muted">
-            ${p.percent}%${p.total ? " &middot; " + fmtSize(p.total) : ""}${fmtSpeed(p._speed) ? " &middot; " + fmtSpeed(p._speed) : ""}
+          <span class="${p.flood_wait_seconds ? "text-warning fw-semibold" : "text-muted"}">
+            ${
+              p.flood_wait_seconds
+                ? `<i class="bi bi-hourglass-split me-1"></i>Kena flood-wait, nunggu ${p.flood_wait_seconds}s...`
+                : `${p.percent}%${p.total ? " &middot; " + fmtSize(p.total) : ""}${fmtSpeed(p._speed) ? " &middot; " + fmtSpeed(p._speed) : ""}`
+            }
           </span>
         </div>
         <div class="progress" style="height:6px;">
-          <div class="progress-bar" role="progressbar" style="width:${p.percent}%"></div>
+          <div class="progress-bar ${p.flood_wait_seconds ? "bg-warning" : ""}" role="progressbar" style="width:${p.percent}%"></div>
         </div>
         <div class="text-muted small mt-1">${p.chat_title || "-"} &middot; <span class="badge account-badge">${p.account}</span></div>
       </div>`
