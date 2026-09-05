@@ -83,7 +83,10 @@
         <div id="active-downloads-card" class="card mb-3 active-downloads-card" hidden>
           <div class="card-header">
             <span><i class="bi bi-arrow-down-circle-fill text-primary me-1"></i> Sedang Download</span>
-            <span class="badge text-bg-primary" id="active-downloads-count">0</span>
+            <span>
+              <span class="badge text-bg-primary" id="active-downloads-count" title="Sedang download">0</span>
+              <span class="badge text-bg-warning" id="queued-count" title="Menunggu giliran (antre)" hidden>0 antre</span>
+            </span>
           </div>
           <div class="card-body" id="active-downloads-list"></div>
         </div>

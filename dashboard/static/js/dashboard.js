@@ -118,14 +118,22 @@
   // ---------- Progress download aktif (file yang lagi didownload, semua halaman) ----------
 
   const activeDownloads = new Map();
+  let queuedCount = 0;
 
   function renderActiveDownloads() {
     const card = document.getElementById("active-downloads-card");
     const list = document.getElementById("active-downloads-list");
     const countEl = document.getElementById("active-downloads-count");
+    const queuedEl = document.getElementById("queued-count");
+
+    if (queuedEl) {
+      queuedEl.hidden = queuedCount === 0;
+      queuedEl.textContent = `${queuedCount} antre`;
+    }
+
     if (!card || !list) return;
 
-    if (activeDownloads.size === 0) {
+    if (activeDownloads.size === 0 && queuedCount === 0) {
       card.hidden = true;
       list.innerHTML = "";
       return;
@@ -153,6 +161,18 @@
   function handleProgress(item) {
     activeDownloads.set(item.progress_id, item);
     renderActiveDownloads();
+  }
+
+  function handleQueueStatus(item) {
+    queuedCount = item.queued || 0;
+    renderActiveDownloads();
+  }
+
+  function fetchQueueStatus() {
+    fetch("/api/queue-status")
+      .then((r) => r.json())
+      .then((data) => handleQueueStatus(data))
+      .catch(() => {});
   }
 
   function handleProgressError(item) {
@@ -298,6 +318,10 @@
       }
       if (item.type === "message_seen") {
         handleMessageSeen(item);
+        return;
+      }
+      if (item.type === "queue_status") {
+        handleQueueStatus(item);
         return;
       }
       if (item.type === "delete") {
@@ -447,6 +471,7 @@
     setupDeleteFolderButtons();
     setupLiveClock();
     setupGofileLogClear();
+    fetchQueueStatus();
     connect();
     if (window.__tgBackfillPoll) {
       pollBackfillJobs();

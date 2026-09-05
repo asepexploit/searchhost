@@ -700,6 +700,10 @@ tr.row-new,
   gap: .9rem;
 }
 
+.active-downloads-card .card-header .badge + .badge {
+  margin-left: .4rem;
+}
+
 .active-download-item:not(:last-child) {
   padding-bottom: .9rem;
   border-bottom: 1px dashed var(--tg-border);
