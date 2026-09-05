@@ -131,6 +131,14 @@
   const activeDownloads = new Map();
   let queuedCount = 0;
 
+  // Server sekarang ngirim event progress minimal tiap ~3 detik (lihat
+  // PROGRESS_HEARTBEAT_SECONDS di downloader.py) walau persennya belum berubah, jadi
+  // kalau UDAH lebih dari ini tanpa event baru sama sekali, transfer-nya beneran macet
+  // (bukan cuma "file gede jadi jarang update") -- ketauan dari kasus nyata: dashboard
+  // masih nunjukin "1.2 MB/s" padahal Task Manager Windows nunjukin adapter WiFi cuma
+  // ngangkut 8 Kbps beneran, karena speed lama nyangkut di layar tanpa update.
+  const STALL_THRESHOLD_MS = 8000;
+
   function renderActiveDownloads() {
     const card = document.getElementById("active-downloads-card");
     const list = document.getElementById("active-downloads-list");
@@ -153,25 +161,27 @@
     card.hidden = false;
     if (countEl) countEl.textContent = activeDownloads.size.toString();
     list.innerHTML = Array.from(activeDownloads.values())
-      .map(
-        (p) => `
+      .map((p) => {
+        const staleMs = typeof p._ts === "number" ? performance.now() - p._ts : 0;
+        const isStalled = !p.flood_wait_seconds && staleMs > STALL_THRESHOLD_MS;
+        const isWarn = p.flood_wait_seconds || isStalled;
+        const statusText = p.flood_wait_seconds
+          ? `<i class="bi bi-hourglass-split me-1"></i>Kena flood-wait, nunggu ${p.flood_wait_seconds}s...`
+          : isStalled
+          ? `<i class="bi bi-exclamation-triangle me-1"></i>Macet -- gak ada data masuk ${Math.round(staleMs / 1000)}s`
+          : `${p.percent}%${p.total ? " &middot; " + fmtSize(p.total) : ""}${fmtSpeed(p._speed) ? " &middot; " + fmtSpeed(p._speed) : ""}`;
+        return `
       <div class="active-download-item" data-progress-id="${p.progress_id}">
         <div class="d-flex justify-content-between small mb-1">
           <span><i class="bi bi-file-earmark-arrow-down me-1 text-primary"></i>${p.filename}</span>
-          <span class="${p.flood_wait_seconds ? "text-warning fw-semibold" : "text-muted"}">
-            ${
-              p.flood_wait_seconds
-                ? `<i class="bi bi-hourglass-split me-1"></i>Kena flood-wait, nunggu ${p.flood_wait_seconds}s...`
-                : `${p.percent}%${p.total ? " &middot; " + fmtSize(p.total) : ""}${fmtSpeed(p._speed) ? " &middot; " + fmtSpeed(p._speed) : ""}`
-            }
-          </span>
+          <span class="${isWarn ? "text-warning fw-semibold" : "text-muted"}">${statusText}</span>
         </div>
         <div class="progress" style="height:6px;">
-          <div class="progress-bar ${p.flood_wait_seconds ? "bg-warning" : ""}" role="progressbar" style="width:${p.percent}%"></div>
+          <div class="progress-bar ${isWarn ? "bg-warning" : ""}" role="progressbar" style="width:${p.percent}%"></div>
         </div>
         <div class="text-muted small mt-1">${p.chat_title || "-"} &middot; <span class="badge account-badge">${p.account}</span></div>
-      </div>`
-      )
+      </div>`;
+      })
       .join("");
   }
 
@@ -546,6 +556,12 @@
     setupGofileLogClear();
     fetchQueueStatus();
     connect();
+    // Re-render tiap detik walau gak ada event baru -- biar status "macet" (gak ada
+    // event masuk lama) ke-update live, gak nunggu tick berikutnya yang mungkin gak
+    // pernah dateng kalau transfer-nya beneran berhenti.
+    setInterval(() => {
+      if (activeDownloads.size > 0) renderActiveDownloads();
+    }, 1000);
     if (window.__tgBackfillPoll) {
       pollBackfillJobs();
     }
