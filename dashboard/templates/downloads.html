@@ -72,13 +72,14 @@
           <th>Dari</th>
           <th>Akun</th>
           <th>Folder</th>
+          <th>Diproses</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="downloads-body">
         {% if downloads|length == 0 %}
         <tr id="empty-row">
-          <td colspan="7">
+          <td colspan="8">
             <div class="empty-state">
               <span class="empty-state-icon"><i class="bi bi-search"></i></span>
               <p>Tidak ada file yang cocok.</p>
@@ -103,6 +104,16 @@
           </td>
           <td><span class="badge account-badge">{{ item.account }}</span></td>
           <td><code class="folder-path" title="{{ item.path }}">{{ item.path_display }}</code></td>
+          <td class="text-center">
+            <button
+              type="button"
+              class="btn btn-sm auto-parsed-badge {{ 'btn-success' if item.auto_parsed else 'btn-outline-secondary' }}"
+              data-toggle-auto-parsed="{{ item.id }}"
+              title="Klik buat toggle status sudah/belum diproses auto-extract"
+            >
+              {{ 'Sudah' if item.auto_parsed else 'Belum' }}
+            </button>
+          </td>
           <td class="text-end">
             <button type="button" class="btn btn-sm btn-outline-danger btn-delete-download" data-delete-id="{{ item.id }}" title="Hapus file & catatannya">
               <i class="bi bi-trash3"></i>

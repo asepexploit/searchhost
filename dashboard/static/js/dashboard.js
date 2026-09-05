@@ -28,6 +28,11 @@
       <td>${item.chat_title || "-"}${item.chat_username ? ` <small class="text-muted">@${item.chat_username}</small>` : ""}<br><small class="text-muted">${item.sender_name || ""}</small></td>
       <td><span class="badge account-badge">${item.account}</span></td>
       <td><code class="folder-path" title="${item.path}">${item.path_display || item.path}</code></td>
+      <td class="text-center">
+        <button type="button" class="btn btn-sm auto-parsed-badge btn-outline-secondary" data-toggle-auto-parsed="${item.id}" title="Klik buat toggle status sudah/belum diproses auto-extract">
+          Belum
+        </button>
+      </td>
       <td class="text-end">
         <button type="button" class="btn btn-sm btn-outline-danger btn-delete-download" data-delete-id="${item.id}" title="Hapus file & catatannya">
           <i class="bi bi-trash3"></i>
@@ -324,6 +329,10 @@
         handleQueueStatus(item);
         return;
       }
+      if (item.type === "auto_parser_batch") {
+        handleAutoParserBatch(item);
+        return;
+      }
       if (item.type === "delete") {
         removeDownloadRow(item.id);
         bumpStat("stat-total", -1);
@@ -449,6 +458,40 @@
     });
   }
 
+  function setAutoParsedBadge(btn, autoParsed) {
+    btn.textContent = autoParsed ? "Sudah" : "Belum";
+    btn.classList.toggle("btn-success", autoParsed);
+    btn.classList.toggle("btn-outline-secondary", !autoParsed);
+  }
+
+  function setupAutoParsedToggle() {
+    document.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-toggle-auto-parsed]");
+      if (!btn) return;
+      const id = btn.dataset.toggleAutoParsed;
+      btn.disabled = true;
+      fetch(`/api/downloads/${id}/toggle-auto-parsed`, { method: "POST" })
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.ok) setAutoParsedBadge(btn, res.auto_parsed);
+          btn.disabled = false;
+        })
+        .catch(() => {
+          btn.disabled = false;
+        });
+    });
+  }
+
+  function handleAutoParserBatch(item) {
+    // Batch auto-extract selesai di server -- badge file yang lagi kelihatan di tabel
+    // ini (kalau ada) ikut di-update jadi "Sudah" tanpa perlu refresh.
+    for (const id of item.ids || []) {
+      const row = document.querySelector(`tr[data-download-id="${id}"]`);
+      const btn = row?.querySelector("[data-toggle-auto-parsed]");
+      if (btn) setAutoParsedBadge(btn, true);
+    }
+  }
+
   function setupLiveClock() {
     const el = document.getElementById("live-clock-text");
     if (!el) return;
@@ -468,6 +511,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     setupThemeToggle();
     setupDeleteButtons();
+    setupAutoParsedToggle();
     setupDeleteFolderButtons();
     setupLiveClock();
     setupGofileLogClear();

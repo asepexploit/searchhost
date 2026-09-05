@@ -106,6 +106,62 @@
 </div>
 
 <div class="card mb-3">
+  <div class="card-header">Auto Text Parser/Extractor</div>
+  <div class="card-body">
+    <form method="post" action="/settings/auto-parser">
+      <div class="form-check form-switch mb-3">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="auto-parser-toggle"
+          name="enabled"
+          value="1"
+          {{ 'checked' if auto_parser_enabled else '' }}
+        >
+        <label class="form-check-label" for="auto-parser-toggle">
+          Auto Extract -- {{ 'Aktif' if auto_parser_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">Keyword</label>
+          <input type="text" class="form-control" name="keyword" value="{{ auto_parser_keyword }}" placeholder="mis. gmail.com">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">Target file per batch</label>
+          <input type="number" class="form-control" name="target" min="1" value="{{ auto_parser_target }}">
+        </div>
+      </div>
+      <div class="form-text mb-3">
+        Begitu file baru (hasil auto-download) yang belum diproses numpuk sejumlah target
+        di atas, otomatis di-extract pakai keyword ini dan hasilnya disimpan ke
+        <code>parsed_data/auto/</code>. File lama yang sudah ada SEBELUM toggle ini
+        pertama kali diaktifkan TIDAK ikut dihitung (dianggap sudah lewat) -- cuma file
+        baru sejak toggle diaktifkan yang dihitung.
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> Simpan Pengaturan
+      </button>
+    </form>
+
+    <hr>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span class="text-muted small">
+        <strong>{{ auto_parser_pending_count }}</strong> file menunggu diproses
+        (target: {{ auto_parser_target }})
+      </span>
+      <form method="post" action="/settings/auto-parser/run-now" class="mb-0">
+        <button type="submit" class="btn btn-outline-primary btn-sm" {{ 'disabled' if auto_parser_pending_count == 0 else '' }}>
+          <i class="bi bi-lightning-fill"></i> Proses Sekarang
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
   <div class="card-header">Tambah Pola Exclude</div>
   <div class="card-body">
     <form class="row g-2" method="post" action="/settings/add">
