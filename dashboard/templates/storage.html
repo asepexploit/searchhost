@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row g-3 mb-3">
   <div class="col-6 col-xl-4">
-    <div class="card stat-card" style="--stat-accent: var(--tg-primary);">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-primary);">
       <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-hdd-fill"></i></div>
       <div>
         <div class="stat-value">{{ total_size_display }}</div>
@@ -14,17 +14,22 @@
     </div>
   </div>
   <div class="col-6 col-xl-4">
-    <div class="card stat-card" style="--stat-accent: var(--tg-success);">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-success);">
       <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-file-earmark-text-fill"></i></div>
       <div>
         <div class="stat-value">{{ total_files }}</div>
-        <div class="stat-label">Total File di Disk</div>
-        <div class="stat-hint">Semua file fisik di folder download -- termasuk yang ditaruh manual di luar aplikasi</div>
+        <div class="stat-label">
+          Total File di Disk
+          <i
+            class="bi bi-info-circle-fill stat-info-icon"
+            title="Semua file fisik di folder download -- termasuk yang ditaruh manual di luar aplikasi"
+          ></i>
+        </div>
       </div>
     </div>
   </div>
   <div class="col-12 col-xl-4">
-    <div class="card stat-card" style="--stat-accent: var(--tg-info);">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-info);">
       <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-folder-fill"></i></div>
       <div>
         <div class="stat-value">{{ folders|length }}</div>

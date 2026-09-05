@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row g-3 mb-4">
   <div class="col-6 col-xl-3">
-    <div class="card stat-card" style="--stat-accent: var(--tg-primary);">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-primary);">
       <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-calendar-day-fill"></i></div>
       <div>
         <div class="stat-value" id="stat-today">{{ stats.today }}</div>
@@ -14,17 +14,22 @@
     </div>
   </div>
   <div class="col-6 col-xl-3">
-    <div class="card stat-card" style="--stat-accent: var(--tg-success);">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-success);">
       <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-file-earmark-text-fill"></i></div>
       <div>
         <div class="stat-value" id="stat-total">{{ stats.total }}</div>
-        <div class="stat-label">File Tercatat (Bot)</div>
-        <div class="stat-hint">Hasil auto-download Telegram -- beda dari total file di disk (lihat Penyimpanan)</div>
+        <div class="stat-label">
+          File Tercatat (Bot)
+          <i
+            class="bi bi-info-circle-fill stat-info-icon"
+            title="Hasil auto-download Telegram -- beda dari total file di disk (lihat Penyimpanan)"
+          ></i>
+        </div>
       </div>
     </div>
   </div>
   <div class="col-6 col-xl-3">
-    <div class="card stat-card" style="--stat-accent: var(--tg-info);">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-info);">
       <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-person-check-fill"></i></div>
       <div>
         <div class="stat-value">{{ accounts|length }}</div>
@@ -33,7 +38,7 @@
     </div>
   </div>
   <div class="col-6 col-xl-3">
-    <div class="card stat-card" style="--stat-accent: var(--tg-warning-strong);">
+    <div class="card stat-card h-100" style="--stat-accent: var(--tg-warning-strong);">
       <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-chat-dots-fill"></i></div>
       <div>
         <div class="stat-value">{{ stats.chats }}</div>

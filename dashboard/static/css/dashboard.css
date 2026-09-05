@@ -546,12 +546,17 @@ code {
   margin-top: .15rem;
 }
 
-.stat-hint {
-  font-size: .68rem;
+.stat-info-icon {
+  font-size: .72rem;
   color: var(--tg-text-muted);
-  opacity: .75;
-  margin-top: .2rem;
-  line-height: 1.3;
+  opacity: .65;
+  margin-left: .3rem;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.stat-info-icon:hover {
+  opacity: 1;
 }
 
 /* ============================================================

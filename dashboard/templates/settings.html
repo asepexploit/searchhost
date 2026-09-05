@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block page_title %}Settings{% endblock %}
-{% block page_subtitle %}Atur nama file yang tidak boleh ikut di-auto-download{% endblock %}
+{% block page_subtitle %}Auto-fetch, auto-extract, dan filter file yang di-auto-download{% endblock %}
 
 {% block content %}
 <div class="card mb-3">
-  <div class="card-header">Auto-fetch File dari Link Eksternal</div>
+  <div class="card-header">
+    <span><i class="bi bi-robot me-2 text-primary"></i>Auto-fetch File dari Link Eksternal</span>
+  </div>
   <div class="card-body">
     <form method="post" action="/settings/bot-fetch" class="mb-3">
       <div class="form-check form-switch">
@@ -106,7 +108,12 @@
 </div>
 
 <div class="card mb-3">
-  <div class="card-header">Auto Text Parser/Extractor</div>
+  <div class="card-header">
+    <span><i class="bi bi-magic me-2 text-primary"></i>Auto Text Parser/Extractor</span>
+    <span class="badge {{ 'text-bg-success' if auto_parser_enabled else 'text-bg-secondary' }}">
+      {{ 'Aktif' if auto_parser_enabled else 'Nonaktif' }}
+    </span>
+  </div>
   <div class="card-body">
     <form method="post" action="/settings/auto-parser">
       <div class="form-check form-switch mb-3">
@@ -162,7 +169,9 @@
 </div>
 
 <div class="card mb-3">
-  <div class="card-header">Tambah Pola Exclude</div>
+  <div class="card-header">
+    <span><i class="bi bi-funnel-fill me-2 text-primary"></i>Tambah Pola Exclude</span>
+  </div>
   <div class="card-body">
     <form class="row g-2" method="post" action="/settings/add">
       <div class="col-12 col-md-8">
@@ -190,7 +199,7 @@
 
 <div class="card">
   <div class="card-header">
-    <span>Pola yang Di-exclude</span>
+    <span><i class="bi bi-funnel-fill me-2 text-primary"></i>Pola yang Di-exclude</span>
     <span class="badge text-bg-secondary">{{ patterns|length }} pola</span>
   </div>
   <ul class="list-group list-group-flush">
