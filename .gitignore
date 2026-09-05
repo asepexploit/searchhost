@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+
+# kredensial pribadi (token lisensi, dll) -- jangan pernah commit
+.env
+
+# session Telegram, database, hasil download/parse -- data pribadi, bukan kode
+sessions/*.session
+sessions/*.session-journal
+data/*.db
+data/.license_proof.json
+download/*
+!download/.gitkeep
+parsed_data/*
+!parsed_data/.gitkeep
+
+*.zip

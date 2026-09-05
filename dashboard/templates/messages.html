@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block page_title %}Pesan Masuk{% endblock %}
+{% block page_subtitle %}Live feed SEMUA pesan masuk apa adanya -- buat debug kenapa auto-fetch (gofile/bot) gak jalan{% endblock %}
+
+{% block content %}
+{% set status_badges = {
+  'file': ('primary', 'File lampiran'),
+  'gofile_ok': ('success', 'Gofile diproses'),
+  'gofile_disabled': ('warning', 'Gofile OFF di Settings'),
+  'gofile_blocked': ('warning', 'Gofile: channel diblokir'),
+  'bot_ok': ('success', 'Bot deep-link diproses'),
+  'bot_disabled': ('warning', 'Bot fetch OFF di Settings'),
+  'bot_blocked': ('warning', 'Bot fetch: channel diblokir'),
+  'plain': ('secondary', 'Pesan biasa'),
+} %}
+<div class="card">
+  <div class="card-header">
+    <span>Pesan Masuk</span>
+    <span class="badge text-bg-secondary">{{ messages|length }} tersimpan (maks 500 terbaru)</span>
+  </div>
+  <p class="text-muted small px-3 pt-3 mb-0">
+    Tiap pesan masuk (semua akun) dicatat di sini apa adanya, lengkap sama alasan kenapa
+    diproses atau dilewati -- kolom <strong>Status</strong> bakal bilang jelas kalau mis.
+    link gofile kedetect tapi fitur-nya masih OFF di <a href="/settings">Settings</a>, atau
+    channel-nya belum di-whitelist. Baris baru masuk otomatis lewat live update, dan tetap
+    ada walau halaman ini di-refresh (cuma nyimpen 500 pesan terbaru, bukan riwayat penuh).
+  </p>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>Akun</th>
+          <th>Chat</th>
+          <th>Pengirim</th>
+          <th>Isi pesan</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="messages-body">
+        {% if messages|length == 0 %}
+        <tr id="messages-empty-row">
+          <td colspan="6">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-chat-dots"></i></span>
+              <p>Belum ada pesan masuk yang tercatat. Kirim/terima pesan baru buat lihat aktivitasnya di sini.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for m in messages %}
+        {% set badge = status_badges.get(m.status, ('secondary', m.status)) %}
+        <tr>
+          <td data-iso="{{ m.ts }}">{{ m.ts }}</td>
+          <td><span class="badge account-badge">{{ m.account }}</span></td>
+          <td>{{ m.chat_title or "-" }}{% if m.chat_username %} <small class="text-muted">@{{ m.chat_username }}</small>{% endif %}</td>
+          <td>{{ m.sender_name or "-" }}</td>
+          <td class="small">{{ m.text_preview or '(tanpa teks)' }}</td>
+          <td>
+            <span class="badge text-bg-{{ badge[0] }}">{{ badge[1] }}</span>
+            <div class="text-muted small mt-1">{{ m.note }}</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

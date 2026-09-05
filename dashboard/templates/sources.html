@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block page_title %}Sumber Channel{% endblock %}
+{% block page_subtitle %}Atur channel/grup mana yang auto-download-nya nyala, dan tarik riwayat lama{% endblock %}
+
+{% block content %}
+{% if message %}
+<div class="alert alert-info">{{ message }}</div>
+{% endif %}
+
+<div class="card mb-3">
+  <div class="card-header">Channel Auto-download (Live)</div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      Kosong = auto-download jalan untuk <strong>semua</strong> chat pribadi/grup/channel.
+      Kalau diisi, auto-download live <strong>hanya</strong> jalan untuk channel/grup yang
+      terdaftar di bawah ini saja.
+    </p>
+    <form class="row g-2 align-items-end mb-3" method="post" action="/sources/allow">
+      <div class="col-12 col-md-9">
+        <input
+          type="text"
+          class="form-control"
+          name="channel"
+          placeholder="@username atau https://t.me/username"
+          required
+        >
+      </div>
+      <div class="col-12 col-md-3">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-plus-lg"></i> Tambah
+        </button>
+      </div>
+    </form>
+
+    <ul class="list-group list-group-flush">
+      {% for c in allowed_channels %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span class="d-flex align-items-center gap-2">
+          <span class="file-icon"><i class="bi bi-broadcast"></i></span>
+          <span class="fw-semibold">@{{ c.channel }}</span>
+        </span>
+        <form method="post" action="/sources/allow/delete/{{ c.id }}" class="mb-0">
+          <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus dari whitelist">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </form>
+      </li>
+      {% else %}
+      <li class="list-group-item">
+        <div class="empty-state py-3">
+          <span class="empty-state-icon"><i class="bi bi-globe2"></i></span>
+          <p>Belum ada whitelist -- semua chat masih di-auto-download.</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Download Riwayat (Backfill)</div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      Tarik file <code>.txt</code> lama dari channel/grup tertentu dalam rentang tanggal,
+      pakai salah satu akun yang jadi member/subscriber di channel itu. Atau centang
+      <strong>"Semua channel/grup"</strong> buat backfill semua chat yang diikuti akun itu
+      sekaligus. Hasilnya muncul otomatis di halaman Downloads begitu selesai.
+    </p>
+    <form class="row g-2 align-items-end" method="post" action="/sources/backfill">
+      <div class="col-12 col-md-4">
+        <label class="form-label small text-muted mb-1">Channel/grup</label>
+        <input
+          type="text"
+          class="form-control"
+          name="channel"
+          id="backfill-channel-input"
+          placeholder="@username atau https://t.me/username"
+          required
+        >
+        <div class="form-check mt-1">
+          <input class="form-check-input" type="checkbox" id="backfill-all-toggle">
+          <label class="form-check-label small text-muted" for="backfill-all-toggle">
+            <i class="bi bi-globe2 me-1"></i>Semua channel/grup yang diikuti akun ini
+          </label>
+        </div>
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label small text-muted mb-1">Pakai akun</label>
+        <select class="form-select" name="account" required>
+          {% for acc in accounts %}
+          <option value="{{ acc }}">{{ acc }}</option>
+          {% else %}
+          <option value="" disabled selected>Tidak ada akun aktif</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Dari tanggal</label>
+        <input type="date" class="form-control" name="date_from" required>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Sampai tanggal</label>
+        <input type="date" class="form-control" name="date_to" required>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100" {% if not accounts %}disabled{% endif %}>
+          <i class="bi bi-cloud-arrow-down-fill"></i> Mulai
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card-header border-top">
+    <span>Riwayat Backfill</span>
+    <span class="badge text-bg-secondary">live</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Channel</th>
+          <th>Akun</th>
+          <th>Rentang</th>
+          <th>Status</th>
+          <th>Progress</th>
+          <th>Hasil</th>
+        </tr>
+      </thead>
+      <tbody id="backfill-jobs-body">
+        {% if backfill_jobs|length == 0 %}
+        <tr id="backfill-empty-row">
+          <td colspan="6">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-cloud-arrow-down"></i></span>
+              <p>Belum ada backfill yang dijalankan.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for job in backfill_jobs %}
+        <tr data-job-id="{{ job.id }}">
+          <td>
+            {% if job.channel %}@{{ job.channel }}
+            {% else %}<span class="text-primary"><i class="bi bi-globe2 me-1"></i>Semua channel/grup</span>
+            {% endif %}
+          </td>
+          <td><span class="badge account-badge">{{ job.account }}</span></td>
+          <td>{{ job.date_from }} &rarr; {{ job.date_to }}</td>
+          <td data-field="status">
+            {% if job.status in ("queued", "running") %}
+            <span class="badge text-bg-warning">Berjalan...</span>
+            {% elif job.status == "done" %}
+            <span class="badge text-bg-success">Selesai</span>
+            {% else %}
+            <span class="badge text-bg-danger">Gagal</span>
+            {% endif %}
+          </td>
+          <td data-field="progress">
+            {% if job.status in ("queued", "running") %}
+            <div class="progress" style="height:6px; min-width:110px;">
+              <div class="progress-bar" role="progressbar" style="width: {{ job.percent or 0 }}%"></div>
+            </div>
+            <small class="text-muted">
+              {{ job.percent or 0 }}% &middot; {{ job.scanned or 0 }} pesan, {{ job.downloaded or 0 }} file
+              {% if job.current_chat %}<br>Scan: {{ job.current_chat }}{% endif %}
+            </small>
+            {% elif job.status == "done" %}
+            <span class="text-success small">100%</span>
+            {% else %}
+            <span class="text-muted small">-</span>
+            {% endif %}
+          </td>
+          <td data-field="result">
+            {% if job.status == "done" %}
+            {{ job.downloaded }} file dari {{ job.scanned }} pesan discan
+            {% elif job.status == "error" %}
+            <span class="text-danger">{{ job.error }}</span>
+            {% else %}
+            <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.__tgBackfillPoll = true;
+
+  (function () {
+    const toggle = document.getElementById("backfill-all-toggle");
+    const input = document.getElementById("backfill-channel-input");
+    if (!toggle || !input) return;
+    toggle.addEventListener("change", () => {
+      input.disabled = toggle.checked;
+      input.required = !toggle.checked;
+      if (toggle.checked) input.value = "";
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block page_title %}Downloads{% endblock %}
+{% block page_subtitle %}Semua file yang sudah otomatis terdownload ({{ total }} file){% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-body py-3">
+    <form class="row g-2 align-items-end" method="get" action="/downloads">
+      <div class="col-12 col-md-3">
+        <label class="form-label small text-muted mb-1">Nama file</label>
+        <input type="text" class="form-control" name="q" placeholder="Cari nama file..." value="{{ search or '' }}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Akun</label>
+        <select class="form-select" name="account">
+          <option value="">Semua akun</option>
+          {% for acc in all_accounts %}
+          <option value="{{ acc }}" {% if acc == account %}selected{% endif %}>{{ acc }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small text-muted mb-1">Channel/grup</label>
+        <input
+          type="text"
+          class="form-control"
+          name="channel"
+          list="channel-options"
+          placeholder="@username atau t.me/username"
+          value="{{ channel or '' }}"
+        >
+        <datalist id="channel-options">
+          {% for c in known_channels %}
+          <option value="{{ c.chat_username }}">{{ c.chat_title }} ({{ c.total }} file)</option>
+          {% endfor %}
+        </datalist>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Dari tanggal</label>
+        <input type="date" class="form-control" name="date_from" value="{{ date_from or '' }}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Sampai tanggal</label>
+        <input type="date" class="form-control" name="date_to" value="{{ date_to or '' }}">
+      </div>
+      <div class="col-12 d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-search"></i> Filter
+        </button>
+        {% if search or account or channel or date_from or date_to %}
+        <a href="/downloads" class="btn btn-outline-secondary">
+          <i class="bi bi-x-lg"></i> Reset
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span>Daftar File</span>
+    <span class="badge text-bg-secondary">real-time</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>File</th>
+          <th>Ukuran</th>
+          <th>Dari</th>
+          <th>Akun</th>
+          <th>Folder</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="downloads-body">
+        {% if downloads|length == 0 %}
+        <tr id="empty-row">
+          <td colspan="7">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-search"></i></span>
+              <p>Tidak ada file yang cocok.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for item in downloads %}
+        <tr data-download-id="{{ item.id }}">
+          <td data-iso="{{ item.downloaded_at }}">{{ item.downloaded_at }}</td>
+          <td>
+            <div class="file-cell">
+              <span class="file-icon"><i class="bi bi-file-earmark-text"></i></span>
+              {{ item.filename }}
+              {% if not item.exists %}<span class="badge text-bg-secondary ms-1">File hilang</span>{% endif %}
+            </div>
+          </td>
+          <td>{{ item.size_display }}</td>
+          <td>
+            {{ item.chat_title }}{% if item.chat_username %} <small class="text-muted">@{{ item.chat_username }}</small>{% endif %}<br>
+            <small class="text-muted">{{ item.sender_name or "" }}</small>
+          </td>
+          <td><span class="badge account-badge">{{ item.account }}</span></td>
+          <td><code class="folder-path" title="{{ item.path }}">{{ item.path_display }}</code></td>
+          <td class="text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-download" data-delete-id="{{ item.id }}" title="Hapus file & catatannya">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if total_pages > 1 %}
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <span class="text-muted small">Halaman <strong class="text-body">{{ page }}</strong> dari {{ total_pages }}</span>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary pager-btn {% if page <= 1 %}disabled{% endif %}"
+         href="/downloads?page={{ page - 1 }}&{{ query_string }}">
+        <i class="bi bi-chevron-left"></i> Sebelumnya
+      </a>
+      <a class="btn btn-outline-secondary pager-btn {% if page >= total_pages %}disabled{% endif %}"
+         href="/downloads?page={{ page + 1 }}&{{ query_string }}">
+        Berikutnya <i class="bi bi-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Live update hanya relevan kalau lagi lihat halaman pertama tanpa filter apapun.
+  window.__tgLiveAppend = {{ "true" if (page == 1 and not search and not account and not channel and not date_from and not date_to) else "false" }};
+</script>
+{% endblock %}

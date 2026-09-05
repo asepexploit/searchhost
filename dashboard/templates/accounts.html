@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block page_title %}Akun Terhubung{% endblock %}
+{% block page_subtitle %}Akun Telegram yang sedang dipantau ({{ accounts|length }} akun){% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  {% for acc in account_cards %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card account-card" data-account-card="{{ acc.label }}">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="account-avatar"><i class="bi bi-person-fill"></i></div>
+          <div>
+            <div class="fw-semibold">{{ acc.label }}</div>
+            <span class="online-badge"><span class="dot"></span> Online</span>
+          </div>
+        </div>
+        <dl class="account-stats mb-0">
+          <div class="d-flex justify-content-between py-1">
+            <dt class="text-muted">Total file</dt>
+            <dd class="mb-0 fw-semibold" data-field="total">{{ acc.total }}</dd>
+          </div>
+          <div class="d-flex justify-content-between py-1">
+            <dt class="text-muted">Total ukuran</dt>
+            <dd class="mb-0 fw-semibold" data-field="size">{{ acc.size_display }}</dd>
+          </div>
+          <div class="d-flex justify-content-between py-1">
+            <dt class="text-muted">Terakhir aktif</dt>
+            <dd class="mb-0 fw-semibold" data-field="last_at">{{ acc.last_at or "-" }}</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="empty-state">
+          <span class="empty-state-icon"><i class="bi bi-person-x"></i></span>
+          <p>Tidak ada akun aktif.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

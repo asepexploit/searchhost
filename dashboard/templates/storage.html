@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block page_title %}Penyimpanan{% endblock %}
+{% block page_subtitle %}Auto-detect folder & ukuran file yang sudah terdownload{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-4">
+    <div class="card stat-card" style="--stat-accent: var(--tg-primary);">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-hdd-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ total_size_display }}</div>
+        <div class="stat-label">Total Ukuran</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-4">
+    <div class="card stat-card" style="--stat-accent: var(--tg-success);">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-file-earmark-text-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ total_files }}</div>
+        <div class="stat-label">Total File</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-4">
+    <div class="card stat-card" style="--stat-accent: var(--tg-info);">
+      <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-folder-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ folders|length }}</div>
+        <div class="stat-label">Folder Terdeteksi</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span>Folder di {{ download_root }}</span>
+    <span class="badge text-bg-secondary">discan langsung dari disk</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Folder</th>
+          <th>Jumlah File</th>
+          <th>Ukuran</th>
+          <th style="min-width:160px;">Proporsi</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if folders|length == 0 %}
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-folder-x"></i></span>
+              <p>Belum ada folder download.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% set max_size = (folders|map(attribute='size')|list or [0])|max %}
+        {% for f in folders %}
+        <tr>
+          <td>
+            <div class="file-cell">
+              <span class="file-icon"><i class="bi bi-folder-fill"></i></span>
+              {{ f.name }}
+            </div>
+          </td>
+          <td>{{ f.file_count }}</td>
+          <td>{{ f.size_display }}</td>
+          <td>
+            <div class="progress" style="height:8px;">
+              <div class="progress-bar" role="progressbar" style="width: {{ (f.size / max_size * 100) if max_size else 0 }}%"></div>
+            </div>
+          </td>
+          <td class="text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-folder" data-delete-folder="{{ f.name }}" title="Hapus folder ini beserta semua isinya">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

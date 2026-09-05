@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Atur nama file yang tidak boleh ikut di-auto-download{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">Auto-fetch File dari Link Eksternal</div>
+  <div class="card-body">
+    <form method="post" action="/settings/bot-fetch" class="mb-3">
+      <div class="form-check form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="bot-fetch-toggle"
+          name="enabled"
+          value="1"
+          {{ 'checked' if bot_fetch_enabled else '' }}
+          onchange="this.form.submit()"
+        >
+        <label class="form-check-label" for="bot-fetch-toggle">
+          Lewat Bot Telegram -- {{ 'Aktif' if bot_fetch_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="form-text">
+        Beberapa channel post file bukan lewat attachment langsung, tapi lewat tombol
+        <strong>"DOWNLOAD FROM BOT"</strong> yang buka chat ke bot lain lalu kirim
+        <code>/start</code>. Kalau diaktifkan, akun ini otomatis ikut alur itu (buka bot,
+        kirim /start, klik tombol lanjutan kalau ada) dan download file yang dibalas.
+        Karena ini artinya akun kamu otomatis DM bot pihak ketiga, defaultnya nonaktif.
+      </div>
+    </form>
+
+    <form method="post" action="/settings/gofile-fetch">
+      <div class="form-check form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="gofile-fetch-toggle"
+          name="enabled"
+          value="1"
+          {{ 'checked' if gofile_fetch_enabled else '' }}
+          onchange="this.form.submit()"
+        >
+        <label class="form-check-label" for="gofile-fetch-toggle">
+          Lewat Link gofile.io -- {{ 'Aktif' if gofile_fetch_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="form-text">
+        Kalau pesan ada link <code>gofile.io/d/...</code> (di teks atau tombol) dan tidak
+        ada file langsung, ambil isinya lewat API gofile lalu download file yang cocok
+        ekstensi (mis. <code>.txt</code>). Tidak resmi/reverse-engineered -- bisa berhenti
+        jalan kalau gofile ubah struktur API-nya.
+      </div>
+    </form>
+
+    <hr>
+
+    <p class="text-muted small mb-3">
+      Whitelist channel di bawah ini berlaku untuk <strong>kedua</strong> toggle di atas
+      (terpisah dari whitelist <a href="/sources">Sumber Channel</a> biasa). Kosong =
+      berlaku untuk semua channel/grup. Diisi = auto-fetch <strong>hanya</strong> jalan
+      untuk channel/grup yang terdaftar di bawah ini saja.
+    </p>
+    <form class="row g-2 align-items-end mb-3" method="post" action="/settings/bot-fetch/allow">
+      <div class="col-12 col-md-8">
+        <input
+          type="text"
+          class="form-control"
+          name="channel"
+          placeholder="@username atau https://t.me/username"
+          required
+        >
+      </div>
+      <div class="col-12 col-md-4">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-plus-lg"></i> Tambah
+        </button>
+      </div>
+    </form>
+
+    <ul class="list-group list-group-flush">
+      {% for c in bot_fetch_channels %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span class="d-flex align-items-center gap-2">
+          <span class="file-icon"><i class="bi bi-robot"></i></span>
+          <span class="fw-semibold">@{{ c.channel }}</span>
+        </span>
+        <form method="post" action="/settings/bot-fetch/allow/delete/{{ c.id }}" class="mb-0">
+          <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus dari whitelist">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </form>
+      </li>
+      {% else %}
+      <li class="list-group-item">
+        <div class="empty-state py-3">
+          <span class="empty-state-icon"><i class="bi bi-robot"></i></span>
+          <p>Belum ada whitelist -- kalau toggle aktif, berlaku untuk semua channel/grup.</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">Tambah Pola Exclude</div>
+  <div class="card-body">
+    <form class="row g-2" method="post" action="/settings/add">
+      <div class="col-12 col-md-8">
+        <input
+          type="text"
+          class="form-control"
+          name="pattern"
+          placeholder="contoh: rahasia.txt atau *backup*"
+          required
+        >
+        <div class="form-text">
+          Boleh nama file persis (mis. <code>rahasia.txt</code>), atau pakai wildcard
+          <code>*</code> (mis. <code>*backup*</code> untuk semua file yang mengandung kata "backup").
+          Tidak case-sensitive.
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-plus-lg"></i> Tambah
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span>Pola yang Di-exclude</span>
+    <span class="badge text-bg-secondary">{{ patterns|length }} pola</span>
+  </div>
+  <ul class="list-group list-group-flush">
+    {% for p in patterns %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <span class="d-flex align-items-center gap-2">
+        <span class="file-icon"><i class="bi bi-funnel"></i></span>
+        <code>{{ p.pattern }}</code>
+      </span>
+      <form method="post" action="/settings/delete/{{ p.id }}" class="mb-0">
+        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus pola ini">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </form>
+    </li>
+    {% else %}
+    <li class="list-group-item">
+      <div class="empty-state py-3">
+        <span class="empty-state-icon"><i class="bi bi-funnel"></i></span>
+        <p>Belum ada pola exclude. Semua file .txt akan didownload.</p>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

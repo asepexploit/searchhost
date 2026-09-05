@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block page_title %}Text Parser/Extractor{% endblock %}
+{% block page_subtitle %}Filter baris dari file .txt lokal berdasarkan keyword/pattern{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">Pilih File &amp; Keyword</div>
+  <div class="card-body">
+    <div class="btn-group mb-3" role="group" aria-label="Sumber file">
+      <input type="radio" class="btn-check" name="parser-source-mode" id="parser-mode-upload" checked>
+      <label class="btn btn-outline-secondary" for="parser-mode-upload"><i class="bi bi-upload"></i> Upload file</label>
+
+      <input type="radio" class="btn-check" name="parser-source-mode" id="parser-mode-folder">
+      <label class="btn btn-outline-secondary" for="parser-mode-folder"><i class="bi bi-folder2-open"></i> Pilih dari folder download</label>
+    </div>
+
+    <form id="parser-form" method="post" action="/parser" enctype="multipart/form-data" class="row g-3">
+      <div class="col-12 col-md-6" id="parser-upload-group">
+        <label class="form-label" for="parser-file">File .txt lokal</label>
+        <input type="file" class="form-control" id="parser-file" name="file" accept=".txt">
+        <div class="form-text">File dibaca baris demi baris, tidak ada upload ke server pihak ketiga.</div>
+      </div>
+      <div class="col-12 col-md-6 d-none" id="parser-folder-group">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label" for="parser-source-folder">Path download</label>
+            <select class="form-select" id="parser-source-folder" name="source_folder">
+              <option value="">-- pilih folder --</option>
+              <option value="__all__">-- Semua folder (semua tanggal) --</option>
+              {% for f in folders %}
+              <option value="{{ f.name }}">{{ f.name }} ({{ f.file_count }} file)</option>
+              {% endfor %}
+            </select>
+            {% if folders|length == 0 %}
+            <div class="form-text text-warning">Belum ada folder download.</div>
+            {% endif %}
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="parser-source-filename">File .txt terdeteksi</label>
+            <select class="form-select" id="parser-source-filename" name="source_filename" disabled>
+              <option value="">-- pilih folder dulu --</option>
+            </select>
+            <div class="form-text">Otomatis terisi begitu folder dipilih.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="parser-keyword">Keyword / pattern</label>
+        <input
+          type="text"
+          class="form-control"
+          id="parser-keyword"
+          name="keyword"
+          placeholder="contoh: TARGET_PATTERN"
+          required
+        >
+        <div class="form-text">Baris yang mengandung teks ini (case-sensitive) akan diambil.</div>
+      </div>
+      <div class="col-12 col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-filter-circle-fill"></i> Proses
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Progress bar live -- muncul begitu klik "Proses" (job status queued/running), diupdate
+   real-time lewat WebSocket (event "parser_progress"), TANPA reload halaman. Tetap
+   kelihatan kalau halaman di-reload di tengah scan (state awalnya dari `active_job`). #}
+<div id="parser-progress-area" class="card mb-3{% if not active_job %} d-none{% endif %}">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span>
+        <i class="bi bi-hourglass-split"></i>
+        Memindai <span id="parser-progress-files">{{ active_job.files_total if active_job else 0 }}</span> file...
+      </span>
+      <span class="fw-semibold" id="parser-progress-percent">{{ active_job.percent if active_job else 0 }}%</span>
+    </div>
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+         aria-valuenow="{{ active_job.percent if active_job else 0 }}">
+      <div id="parser-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated"
+           style="width: {{ active_job.percent if active_job else 0 }}%"></div>
+    </div>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if result %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-4">
+    <div class="card stat-card" style="--stat-accent: var(--tg-info);">
+      <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-file-earmark-text-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ result.total_lines }}</div>
+        <div class="stat-label">Total Baris</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-4">
+    <div class="card stat-card" style="--stat-accent: var(--tg-success);">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ result.matched_count }}</div>
+        <div class="stat-label">Baris Cocok</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-4">
+    <div class="card stat-card" style="--stat-accent: var(--tg-primary);">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-save2-fill"></i></div>
+      <div>
+        <div class="stat-value" style="font-size:1rem;">{{ result.output_name }}</div>
+        <div class="stat-label">Disimpan ke parsed_data/</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span>
+      Hasil dari <code>{{ result.source_filename }}</code>
+      {% if result.files_processed and result.files_processed > 1 %}
+      <span class="badge text-bg-info">{{ result.files_processed }} file diproses</span>
+      {% endif %}
+      -- keyword <code>{{ result.keyword }}</code>
+    </span>
+    <span class="badge text-bg-secondary">{{ result.matched_count }} baris</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:70px;">#</th>
+          <th>Isi Baris</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if result.matched_count == 0 %}
+        <tr>
+          <td colspan="2">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-search"></i></span>
+              <p>Tidak ada baris yang cocok dengan keyword tersebut.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for line in result.preview %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><code>{{ line }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if result.preview_truncated %}
+  <div class="card-footer text-muted small">
+    Menampilkan 200 baris pertama saja -- hasil lengkap ({{ result.matched_count }} baris) tersimpan di
+    <code>{{ result.output_path }}</code>.
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const uploadRadio = document.getElementById("parser-mode-upload");
+  const folderRadio = document.getElementById("parser-mode-folder");
+  const uploadGroup = document.getElementById("parser-upload-group");
+  const folderGroup = document.getElementById("parser-folder-group");
+  const fileInput = document.getElementById("parser-file");
+  const folderSelect = document.getElementById("parser-source-folder");
+  const filenameSelect = document.getElementById("parser-source-filename");
+
+  function applyMode() {
+    const useFolder = folderRadio.checked;
+    uploadGroup.classList.toggle("d-none", useFolder);
+    folderGroup.classList.toggle("d-none", !useFolder);
+    fileInput.disabled = useFolder;
+    folderSelect.disabled = !useFolder;
+    filenameSelect.disabled = !useFolder || filenameSelect.options.length <= 1;
+  }
+
+  function resetFilenameSelect(placeholder) {
+    filenameSelect.innerHTML = `<option value="">${placeholder}</option>`;
+    filenameSelect.disabled = true;
+  }
+
+  uploadRadio.addEventListener("change", applyMode);
+  folderRadio.addEventListener("change", applyMode);
+
+  folderSelect.addEventListener("change", () => {
+    const folder = folderSelect.value;
+    if (!folder) {
+      resetFilenameSelect("-- pilih folder dulu --");
+      return;
+    }
+    resetFilenameSelect("Mendeteksi file .txt...");
+    fetch(`/api/storage/${encodeURIComponent(folder)}/txt-files`)
+      .then((r) => r.json())
+      .then((data) => {
+        const files = data.files || [];
+        if (files.length === 0) {
+          resetFilenameSelect("-- tidak ada file .txt --");
+          return;
+        }
+        filenameSelect.innerHTML =
+          `<option value="">-- pilih file (${files.length} terdeteksi) --</option>` +
+          `<option value="__all_files__">-- Semua file .txt (gabungkan ${files.length} file) --</option>` +
+          files.map((f) => `<option value="${f.name}">${f.name} (${f.size_display})</option>`).join("");
+        filenameSelect.disabled = false;
+      })
+      .catch(() => resetFilenameSelect("-- gagal mendeteksi file --"));
+  });
+
+  applyMode();
+
+  // Kasih feedback instan pas klik "Proses" -- form tetap submit normal (server bakal
+  // langsung redirect balik ke /parser tanpa nunggu scan kelar, lihat parser_run di
+  // app.py), progress bar beneran diupdate live lewat WebSocket (__handleParserProgress
+  // di bawah), bukan dari sini.
+  const form = document.getElementById("parser-form");
+  form.addEventListener("submit", () => {
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memulai...';
+    }
+  });
+
+  // Dipanggil dari dashboard.js tiap ada event WebSocket "parser_progress" (definisi
+  // `window.__handleParserProgress` ini cuma ada di halaman /parser, dashboard.js
+  // manggilnya pakai `?.()` jadi aman di halaman lain).
+  window.__handleParserProgress = function (job) {
+    if (job.status === "queued" || job.status === "running") {
+      const area = document.getElementById("parser-progress-area");
+      const bar = document.getElementById("parser-progress-bar");
+      const percentEl = document.getElementById("parser-progress-percent");
+      const filesEl = document.getElementById("parser-progress-files");
+      area.classList.remove("d-none");
+      bar.style.width = `${job.percent}%`;
+      bar.parentElement.setAttribute("aria-valuenow", job.percent);
+      percentEl.textContent = `${job.percent}%`;
+      filesEl.textContent = job.files_total;
+      return;
+    }
+    // status "done" atau "error" -- scan udah kelar. Reload biar hasil/error-nya
+    // dirender ulang dari server (Jinja), gak perlu duplikasi markup tabel hasil di
+    // JS -- kelar dalam sekejap (data udah siap), bukan nunggu proses lagi.
+    location.reload();
+  };
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Ringkasan monitoring auto-download file dari Telegram{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card" style="--stat-accent: var(--tg-primary);">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-calendar-day-fill"></i></div>
+      <div>
+        <div class="stat-value" id="stat-today">{{ stats.today }}</div>
+        <div class="stat-label">File Hari Ini</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card" style="--stat-accent: var(--tg-success);">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-file-earmark-text-fill"></i></div>
+      <div>
+        <div class="stat-value" id="stat-total">{{ stats.total }}</div>
+        <div class="stat-label">Total File</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card" style="--stat-accent: var(--tg-info);">
+      <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-person-check-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ accounts|length }}</div>
+        <div class="stat-label">Akun Aktif</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card" style="--stat-accent: var(--tg-warning-strong);">
+      <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-chat-dots-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ stats.chats }}</div>
+        <div class="stat-label">Chat Terpantau</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-xl-8">
+    <div class="card h-100">
+      <div class="card-header">
+        <span>Riwayat 14 Hari</span>
+      </div>
+      <div class="card-body chart-card-body">
+        <canvas id="history-chart" height="90"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <span>Rasio per Akun</span>
+      </div>
+      <div class="card-body chart-card-body d-flex align-items-center justify-content-center">
+        {% if account_cards|length == 0 %}
+        <div class="empty-state py-3">
+          <span class="empty-state-icon"><i class="bi bi-pie-chart"></i></span>
+          <p>Belum ada data.</p>
+        </div>
+        {% else %}
+        <canvas id="ratio-chart" height="180"></canvas>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12">
+    <div class="row g-3">
+      {% for acc in account_cards %}
+      <div class="col-6 col-lg-3">
+        <div class="card session-card" data-account-card="{{ acc.label }}">
+          <div class="session-card-top">
+            <span class="account-avatar session-avatar"><i class="bi bi-person-fill"></i></span>
+            <span class="badge session-status"><span class="dot"></span> Live</span>
+          </div>
+          <div class="session-card-title">{{ acc.label }}</div>
+          <div class="session-card-time">{{ acc.last_at or "Belum ada aktivitas" }}</div>
+          <div class="session-card-counts">
+            <span><i class="bi bi-file-earmark-text me-1"></i><span data-field="total">{{ acc.total }}</span> file</span>
+            <span><i class="bi bi-hdd me-1"></i>{{ acc.size_display }}</span>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-12">
+        <div class="card">
+          <div class="empty-state py-4">
+            <span class="empty-state-icon"><i class="bi bi-person-x"></i></span>
+            <p>Tidak ada akun aktif.</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <span>Download Terbaru</span>
+        <a href="/downloads" class="small">Lihat semua &rarr;</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>File</th>
+              <th>Ukuran</th>
+              <th>Dari</th>
+              <th>Akun</th>
+              <th>Folder</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="downloads-body">
+            {% if downloads|length == 0 %}
+            <tr id="empty-row">
+              <td colspan="7">
+                <div class="empty-state">
+                  <span class="empty-state-icon"><i class="bi bi-inbox"></i></span>
+                  <p>Belum ada file yang terdownload.</p>
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+            {% for item in downloads %}
+            <tr data-download-id="{{ item.id }}">
+              <td data-iso="{{ item.downloaded_at }}">{{ item.downloaded_at }}</td>
+              <td>
+                <div class="file-cell">
+                  <span class="file-icon"><i class="bi bi-file-earmark-text"></i></span>
+                  {{ item.filename }}
+                  {% if not item.exists %}<span class="badge text-bg-secondary ms-1">File hilang</span>{% endif %}
+                </div>
+              </td>
+              <td>{{ item.size_display }}</td>
+              <td>
+                {{ item.chat_title }}<br>
+                <small class="text-muted">{{ item.sender_name or "" }}</small>
+              </td>
+              <td><span class="badge account-badge">{{ item.account }}</span></td>
+              <td><code class="folder-path" title="{{ item.path }}">{{ item.path_display }}</code></td>
+              <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-download" data-delete-id="{{ item.id }}" title="Hapus file & catatannya">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const dailyCounts = {{ daily_counts|tojson }};
+    const accountCards = {{ account_cards|tojson }};
+
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    const PALETTE_VARS = ["--tg-primary", "--tg-success", "--tg-warning-strong", "--tg-danger", "--tg-info"];
+
+    let historyChart = null;
+    let ratioChart = null;
+
+    function buildHistoryChart() {
+      const canvas = document.getElementById("history-chart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const primary = cssVar("--tg-primary") || "#4f46e5";
+      const primaryRgb = cssVar("--tg-primary-rgb") || "79, 70, 229";
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height || 220);
+      gradient.addColorStop(0, `rgba(${primaryRgb}, .35)`);
+      gradient.addColorStop(1, `rgba(${primaryRgb}, 0)`);
+
+      if (historyChart) historyChart.destroy();
+      historyChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: dailyCounts.map((d) => d.date.slice(5)),
+          datasets: [
+            {
+              label: "File terdownload",
+              data: dailyCounts.map((d) => d.count),
+              borderColor: primary,
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: cssVar("--tg-text-muted") } },
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0, color: cssVar("--tg-text-muted") },
+              grid: { color: cssVar("--tg-border") },
+            },
+          },
+        },
+      });
+    }
+
+    function buildRatioChart() {
+      const canvas = document.getElementById("ratio-chart");
+      if (!canvas || accountCards.length === 0) return;
+      const ctx = canvas.getContext("2d");
+      const colors = accountCards.map((_, i) => cssVar(PALETTE_VARS[i % PALETTE_VARS.length]));
+
+      if (ratioChart) ratioChart.destroy();
+      ratioChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: accountCards.map((a) => a.label),
+          datasets: [
+            {
+              data: accountCards.map((a) => a.total),
+              backgroundColor: colors,
+              borderColor: cssVar("--tg-surface"),
+              borderWidth: 3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "68%",
+          plugins: {
+            legend: { position: "bottom", labels: { color: cssVar("--tg-text-muted"), boxWidth: 10, padding: 12 } },
+          },
+        },
+      });
+    }
+
+    function buildCharts() {
+      buildHistoryChart();
+      buildRatioChart();
+    }
+
+    document.addEventListener("DOMContentLoaded", buildCharts);
+    // Warna chart dibaca dari CSS var pas dibuat -- kalau tema diganti (light/dark),
+    // gambar ulang biar warnanya ngikutin, bukan nyangkut di warna tema lama.
+    document.getElementById("theme-toggle")?.addEventListener("click", () => setTimeout(buildCharts, 50));
+  })();
+</script>
+{% endblock %}
