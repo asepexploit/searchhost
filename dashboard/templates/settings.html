@@ -5,6 +5,41 @@
 {% block content %}
 <div class="card mb-3">
   <div class="card-header">
+    <span><i class="bi bi-fingerprint me-2 text-primary"></i>Deteksi File Duplikat</span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/settings/dedup">
+      <div class="form-check form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="dedup-toggle"
+          name="enabled"
+          value="1"
+          {{ 'checked' if dedup_enabled else '' }}
+          onchange="this.form.submit()"
+        >
+        <label class="form-check-label" for="dedup-toggle">
+          Lewati File yang Sudah Pernah Didownload -- {{ 'Aktif' if dedup_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="form-text">
+        Kalau ada pesan yang isinya file yang PERSIS SAMA (dicek dari ID file bawaan
+        Telegram, bukan cuma nama file) dengan yang sudah pernah didownload sebelumnya
+        -- misal pesan lama di-forward/dikirim ulang -- file itu dilewati, gak
+        didownload lagi. Deteksinya instan (dari metadata pesan, sebelum download
+        apa pun jalan), jadi gak nambah beban. Catatan: cuma nangkep kasus
+        forward/kirim-ulang pesan yang sama; kalau orangnya upload ULANG file dari
+        perangkatnya sendiri (walau isinya identik), Telegram anggap itu file baru dan
+        tetap bakal didownload.
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
     <span><i class="bi bi-robot me-2 text-primary"></i>Auto-fetch File dari Link Eksternal</span>
   </div>
   <div class="card-body">
