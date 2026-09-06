@@ -232,6 +232,65 @@
 
 <div class="card mb-3">
   <div class="card-header">
+    <span><i class="bi bi-globe2 me-2 text-primary"></i>Auto Extractor per Domain</span>
+    <span class="badge {{ 'text-bg-success' if auto_domain_parser_enabled else 'text-bg-secondary' }}">
+      {{ 'Aktif' if auto_domain_parser_enabled else 'Nonaktif' }}
+    </span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/settings/auto-domain-parser">
+      <div class="form-check form-switch mb-3">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="auto-domain-parser-toggle"
+          name="enabled"
+          value="1"
+          {{ 'checked' if auto_domain_parser_enabled else '' }}
+        >
+        <label class="form-check-label" for="auto-domain-parser-toggle">
+          Auto Extract per Domain -- {{ 'Aktif' if auto_domain_parser_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="col-12 col-md-6 mb-2">
+        <label class="form-label small text-muted mb-1">Target file per batch</label>
+        <input type="number" class="form-control" name="target" min="1" value="{{ auto_domain_parser_target }}">
+      </div>
+      <div class="form-text mb-3">
+        Beda dari Auto Text Parser/Extractor di atas -- fitur ini gak pakai 1 keyword
+        tetap, tapi otomatis ambil daftar domain dari
+        <code>ngehostutama/list-hosting.txt</code> (subdomain otomatis dibuang, cuma
+        root domain-nya yang dipakai, mis. <code>toko.example.com</code> jadi
+        <code>example.com</code>). Begitu file baru numpuk sejumlah target, tiap domain
+        di-scan sendiri-sendiri, hasilnya disimpan ke file TERPISAH per domain di
+        <code>parsed_data/auto-datafolder/&lt;domain&gt;_login_pass.txt</code>
+        (menumpuk terus, bukan dibikin file baru tiap batch). Saat ini terdeteksi
+        <strong>{{ auto_domain_parser_domain_count }}</strong> domain unik di list-hosting.txt.
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> Simpan Pengaturan
+      </button>
+    </form>
+
+    <hr>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span class="text-muted small">
+        <strong>{{ auto_domain_parser_pending_count }}</strong> file menunggu diproses
+        (target: {{ auto_domain_parser_target }})
+      </span>
+      <form method="post" action="/settings/auto-domain-parser/run-now" class="mb-0">
+        <button type="submit" class="btn btn-outline-primary btn-sm" {{ 'disabled' if auto_domain_parser_pending_count == 0 or auto_domain_parser_domain_count == 0 else '' }}>
+          <i class="bi bi-lightning-fill"></i> Proses Sekarang
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
     <span><i class="bi bi-funnel-fill me-2 text-primary"></i>Tambah Pola Exclude</span>
   </div>
   <div class="card-body">
