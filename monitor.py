@@ -10,7 +10,13 @@ import os
 
 from telethon import TelegramClient
 
-from telegram_login.config import DEFAULT_API_ID, DEFAULT_API_HASH, SESSIONS_DIR
+from telegram_login.config import (
+    DEFAULT_API_ID,
+    DEFAULT_API_HASH,
+    SESSIONS_DIR,
+    CONNECTION_RETRIES,
+    RETRY_DELAY_SECONDS,
+)
 from telegram_login.credentials import load_cached_credentials
 from telegram_login.monitor import start_monitoring
 
@@ -33,7 +39,13 @@ async def main():
 
     accounts = []
     for phone in phones:
-        client = TelegramClient(os.path.join(SESSIONS_DIR, phone), api_id, api_hash)
+        client = TelegramClient(
+            os.path.join(SESSIONS_DIR, phone),
+            api_id,
+            api_hash,
+            connection_retries=CONNECTION_RETRIES,
+            retry_delay=RETRY_DELAY_SECONDS,
+        )
         await client.connect()
         if not await client.is_user_authorized():
             print(f"Session {phone} tidak valid/expired, lewati. Login ulang lewat `python main.py`.")
