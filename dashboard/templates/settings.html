@@ -145,88 +145,122 @@
 <div class="card mb-3">
   <div class="card-header">
     <span><i class="bi bi-magic me-2 text-primary"></i>Auto Text Parser/Extractor</span>
-    <span class="badge {{ 'text-bg-success' if auto_parser_enabled else 'text-bg-secondary' }}">
-      {{ 'Aktif' if auto_parser_enabled else 'Nonaktif' }}
-    </span>
   </div>
   <div class="card-body">
-    <form method="post" action="/settings/auto-parser">
-      <div class="form-check form-switch mb-3">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="auto-parser-toggle"
-          name="enabled"
-          value="1"
-          {{ 'checked' if auto_parser_enabled else '' }}
-        >
-        <label class="form-check-label" for="auto-parser-toggle">
-          Auto Extract -- {{ 'Aktif' if auto_parser_enabled else 'Nonaktif' }}
-        </label>
-      </div>
-      <div class="row g-2 mb-2">
-        <div class="col-12 col-md-6">
-          <label class="form-label small text-muted mb-1">Keyword</label>
-          <input type="text" class="form-control" name="keyword" value="{{ auto_parser_keyword }}" placeholder="mis. gmail.com">
-        </div>
-        <div class="col-12 col-md-6">
-          <label class="form-label small text-muted mb-1">Target file per batch</label>
-          <input type="number" class="form-control" name="target" min="1" value="{{ auto_parser_target }}">
-        </div>
-      </div>
-      <div class="form-text mb-3">
-        Begitu file baru (hasil auto-download) yang belum diproses numpuk sejumlah target
-        di atas, otomatis di-extract pakai keyword ini dan hasilnya disimpan ke
-        <code>parsed_data/auto/</code>. File lama yang sudah ada SEBELUM toggle ini
-        pertama kali diaktifkan TIDAK ikut dihitung (dianggap sudah lewat) -- cuma file
-        baru sejak toggle diaktifkan yang dihitung.
-      </div>
+    <div class="form-text mb-3">
+      Bisa lebih dari 1 profil sekaligus -- tiap profil punya keyword & folder output
+      SENDIRI-SENDIRI (mis. profil "clientarea" nyimpen ke folder A, profil "wp-login"
+      nyimpen ke folder B). Begitu file baru (hasil auto-download) yang belum diproses
+      PROFIL ITU numpuk sejumlah target-nya, otomatis di-extract & disimpan.
+    </div>
 
-      <hr>
+    {% for profile in auto_parser_profiles %}
+    <div class="card mb-3 {{ 'border-success' if profile.enabled else '' }}">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Parser #{{ profile.id }}{{ ' -- ' + profile.keyword if profile.keyword else '' }}</span>
+        <span class="badge {{ 'text-bg-success' if profile.enabled else 'text-bg-secondary' }}">
+          {{ 'Aktif' if profile.enabled else 'Nonaktif' }}
+        </span>
+      </div>
+      <div class="card-body">
+        <form method="post" action="/settings/auto-parser/{{ profile.id }}">
+          <div class="form-check form-switch mb-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="auto-parser-toggle-{{ profile.id }}"
+              name="enabled"
+              value="1"
+              {{ 'checked' if profile.enabled else '' }}
+            >
+            <label class="form-check-label" for="auto-parser-toggle-{{ profile.id }}">
+              Auto Extract -- {{ 'Aktif' if profile.enabled else 'Nonaktif' }}
+            </label>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted mb-1">Keyword</label>
+              <input type="text" class="form-control" name="keyword" value="{{ profile.keyword }}" placeholder="mis. clientarea">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted mb-1">Target file per batch</label>
+              <input type="number" class="form-control" name="target" min="1" value="{{ profile.target }}">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted mb-1">Folder output (kosongkan = default)</label>
+              <input type="text" class="form-control" name="output_dir" value="{{ profile.output_dir or '' }}" placeholder="mis. clientarea-hasil">
+            </div>
+          </div>
+          <div class="form-text mb-3">
+            Hasilnya disimpan ke <code>{{ profile.output_dir_display }}</code>.
+            Kosongkan folder output buat pakai default (<code>parsed_data/auto/</code>) --
+            isi buat custom (mis. "clientarea-hasil" nyimpen ke
+            <code>parsed_data/clientarea-hasil/</code>). File lama yang sudah ada SEBELUM
+            toggle ini pertama kali diaktifkan TIDAK ikut dihitung (dianggap sudah lewat)
+            -- cuma file baru sejak toggle diaktifkan yang dihitung PROFIL INI.
+          </div>
 
-      <div class="form-check form-switch mb-2">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="auto-parser-append-toggle"
-          name="append_enabled"
-          value="1"
-          {{ 'checked' if auto_parser_append_enabled else '' }}
-        >
-        <label class="form-check-label" for="auto-parser-append-toggle">
-          Gabung ke 1 file sampai penuh -- {{ 'Aktif' if auto_parser_append_enabled else 'Nonaktif' }}
-        </label>
+          <hr>
+
+          <div class="form-check form-switch mb-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="auto-parser-append-toggle-{{ profile.id }}"
+              name="append_enabled"
+              value="1"
+              {{ 'checked' if profile.append_enabled else '' }}
+            >
+            <label class="form-check-label" for="auto-parser-append-toggle-{{ profile.id }}">
+              Gabung ke 1 file sampai penuh -- {{ 'Aktif' if profile.append_enabled else 'Nonaktif' }}
+            </label>
+          </div>
+          <div class="col-12 col-md-6 mb-2">
+            <label class="form-label small text-muted mb-1">Maks baris per file</label>
+            <input type="number" class="form-control" name="max_lines" min="1" value="{{ profile.max_lines }}">
+          </div>
+          <div class="form-text mb-3">
+            Kalau OFF (default), tiap batch selalu bikin file <code>.txt</code> baru
+            sendiri. Kalau ON, hasil batch digabung (append) ke file yang sama sampai
+            jumlah barisnya nyentuh batas di atas -- baru setelah itu bikin file baru.
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-save"></i> Simpan
+          </button>
+        </form>
+
+        <hr>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="text-muted small">
+            <strong>{{ profile.pending_count }}</strong> file menunggu diproses
+            (target: {{ profile.target }})
+          </span>
+          <div class="d-flex gap-2">
+            <form method="post" action="/settings/auto-parser/{{ profile.id }}/run-now" class="mb-0">
+              <button type="submit" class="btn btn-outline-primary btn-sm" {{ 'disabled' if profile.pending_count == 0 else '' }}>
+                <i class="bi bi-lightning-fill"></i> Proses Sekarang
+              </button>
+            </form>
+            <form method="post" action="/settings/auto-parser/{{ profile.id }}/delete" class="mb-0"
+                  onsubmit="return confirm('Hapus profil #{{ profile.id }}? Riwayat sudah/belum diproses profil ini juga ikut kehapus.');">
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-trash"></i> Hapus
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
-      <div class="col-12 col-md-6 mb-2">
-        <label class="form-label small text-muted mb-1">Maks baris per file</label>
-        <input type="number" class="form-control" name="max_lines" min="1" value="{{ auto_parser_max_lines }}">
-      </div>
-      <div class="form-text mb-3">
-        Kalau OFF (default), tiap batch selalu bikin file <code>.txt</code> baru sendiri.
-        Kalau ON, hasil batch digabung (append) ke file yang sama sampai jumlah barisnya
-        nyentuh batas di atas (mis. 5000 atau 10000) -- baru setelah itu bikin file baru.
-        Batasnya kira-kira (gak dipotong di tengah batch), bukan batas byte-perfect.
-      </div>
-      <button type="submit" class="btn btn-primary">
-        <i class="bi bi-save"></i> Simpan Pengaturan
+    </div>
+    {% endfor %}
+
+    <form method="post" action="/settings/auto-parser/add" class="mb-0">
+      <button type="submit" class="btn btn-outline-primary">
+        <i class="bi bi-plus-lg"></i> Tambah Parser Baru
       </button>
     </form>
-
-    <hr>
-
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <span class="text-muted small">
-        <strong>{{ auto_parser_pending_count }}</strong> file menunggu diproses
-        (target: {{ auto_parser_target }})
-      </span>
-      <form method="post" action="/settings/auto-parser/run-now" class="mb-0">
-        <button type="submit" class="btn btn-outline-primary btn-sm" {{ 'disabled' if auto_parser_pending_count == 0 else '' }}>
-          <i class="bi bi-lightning-fill"></i> Proses Sekarang
-        </button>
-      </form>
-    </div>
   </div>
 </div>
 

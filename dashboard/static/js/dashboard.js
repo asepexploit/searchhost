@@ -522,13 +522,12 @@
   }
 
   function handleAutoParserBatch(item) {
-    // Batch auto-extract selesai di server -- badge file yang lagi kelihatan di tabel
-    // ini (kalau ada) ikut di-update jadi "Sudah" tanpa perlu refresh.
-    for (const id of item.ids || []) {
-      const row = document.querySelector(`tr[data-download-id="${id}"]`);
-      const btn = row?.querySelector("[data-toggle-auto-parsed]");
-      if (btn) setAutoParsedBadge(btn, true);
-    }
+    // Sengaja TIDAK nge-update badge "Sudah/Belum" di sini -- sejak Auto Text
+    // Parser/Extractor bisa lebih dari 1 profil, badge itu artinya "sudah diproses di
+    // SEMUA profil enabled", jadi 1 event batch (dari 1 PROFIL doang) belum tentu
+    // berarti agregatnya beneran sudah "Sudah" (bisa masih ada profil lain yang belum).
+    // Badge-nya tetap akurat kok, cuma nunggu refresh/pindah halaman berikutnya
+    // (dihitung ulang server-side lewat DownloadStore.get_auto_parsed_status).
   }
 
   function setupLiveClock() {
