@@ -335,6 +335,28 @@
         <i class="bi bi-save"></i> Simpan
       </button>
     </form>
+
+    <hr>
+
+    <h6 class="mb-2">Kirim Semua File di 1 Folder ke API</h6>
+    <div class="form-text mb-3">
+      Buat kirim file .txt yang UDAH ADA di suatu folder (mis. numpuk dari sebelum toggle
+      "Kirim ke API" dinyalain) -- bukan nunggu batch auto-extract baru. Folder-nya bebas
+      (custom), relatif ke <code>parsed_data/</code> (mis. isi "leemek" buat
+      <code>parsed_data/leemek/</code>, atau "auto" buat folder default). Tiap file yang
+      KEKIRIM SUKSES otomatis DIHAPUS dari lokal -- yang gagal kirim TETAP DIBIARKAN.
+    </div>
+    <form method="post" action="/settings/mr4sep-api/send-folder" class="row g-2"
+          onsubmit="return confirm('Kirim semua file .txt di folder ini ke API, lalu hapus yang berhasil terkirim dari lokal?');">
+      <div class="col-12 col-md-8">
+        <input type="text" class="form-control" name="folder_path" placeholder="mis. leemek, auto, clientarea-hasil" required>
+      </div>
+      <div class="col-12 col-md-4">
+        <button type="submit" class="btn btn-outline-primary w-100">
+          <i class="bi bi-cloud-upload"></i> Kirim & Hapus
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
