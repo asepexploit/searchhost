@@ -226,6 +226,45 @@
             sendiri. Kalau ON, hasil batch digabung (append) ke file yang sama sampai
             jumlah barisnya nyentuh batas di atas -- baru setelah itu bikin file baru.
           </div>
+
+          <hr>
+
+          <div class="form-check form-switch mb-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="auto-parser-send-api-toggle-{{ profile.id }}"
+              name="send_to_api"
+              value="1"
+              {{ 'checked' if profile.send_to_api else '' }}
+            >
+            <label class="form-check-label" for="auto-parser-send-api-toggle-{{ profile.id }}">
+              Kirim ke API (File .txt) -- {{ 'Aktif' if profile.send_to_api else 'Nonaktif' }}
+            </label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="auto-parser-delete-after-send-toggle-{{ profile.id }}"
+              name="delete_after_send"
+              value="1"
+              {{ 'checked' if profile.delete_after_send else '' }}
+            >
+            <label class="form-check-label" for="auto-parser-delete-after-send-toggle-{{ profile.id }}">
+              Hapus file lokal setelah terkirim -- {{ 'Aktif' if profile.delete_after_send else 'Nonaktif' }}
+            </label>
+          </div>
+          <div class="form-text mb-3">
+            Kalau "Kirim ke API" aktif, hasil tiap batch (baris yang barusan cocok, bukan
+            isi file gabungan) otomatis dikirim ke
+            <code>{{ mr4sep_api_url }}</code> (atur URL & API key-nya di kartu "API File
+            .txt" di bawah). "Hapus file lokal setelah terkirim" cuma berlaku KALAU
+            kirimnya BENERAN sukses -- kalau gagal kirim, file lokal TETAP disimpan (biar
+            gak ada yang ilang dua-duanya).
+          </div>
           <button type="submit" class="btn btn-primary btn-sm">
             <i class="bi bi-save"></i> Simpan
           </button>
@@ -259,6 +298,41 @@
     <form method="post" action="/settings/auto-parser/add" class="mb-0">
       <button type="submit" class="btn btn-outline-primary">
         <i class="bi bi-plus-lg"></i> Tambah Parser Baru
+      </button>
+    </form>
+
+    <hr>
+
+    <h6 class="mb-2">API File .txt</h6>
+    <div class="form-text mb-3">
+      URL & API key BERSAMA yang dipakai SEMUA profil di atas yang toggle "Kirim ke
+      API"-nya aktif -- gak perlu diisi ulang per profil.
+    </div>
+    <form method="post" action="/settings/mr4sep-api">
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-8">
+          <label class="form-label small text-muted mb-1">URL API</label>
+          <input type="text" class="form-control" name="api_url" value="{{ mr4sep_api_url }}">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">
+            API Key
+            {% if mr4sep_api_key_set %}
+              <span class="badge text-bg-success">sudah diisi</span>
+            {% else %}
+              <span class="badge text-bg-secondary">belum diisi</span>
+            {% endif %}
+          </label>
+          <input type="password" class="form-control" name="api_key" value="" placeholder="{{ '•••• (kosongkan biar gak berubah)' if mr4sep_api_key_set else 'isi API key' }}" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-text mb-3">
+        Field API Key SENGAJA selalu kosong pas halaman dibuka (biar key yang udah
+        kesimpen gak ke-tampil balik) -- kosongkan & simpan buat MEMPERTAHANKAN key yang
+        lama, isi buat GANTI ke key baru.
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="bi bi-save"></i> Simpan
       </button>
     </form>
   </div>
