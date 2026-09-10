@@ -19,6 +19,7 @@ from telegram_login.config import (
 )
 from telegram_login.credentials import load_cached_credentials
 from telegram_login.monitor import start_monitoring
+from telegram_login.resilient_session import ResilientSQLiteSession
 
 
 def find_session_phones() -> list[str]:
@@ -67,7 +68,7 @@ async def main():
     accounts = []
     for phone in phones:
         client = TelegramClient(
-            os.path.join(SESSIONS_DIR, phone),
+            ResilientSQLiteSession(os.path.join(SESSIONS_DIR, phone)),
             api_id,
             api_hash,
             connection_retries=CONNECTION_RETRIES,
