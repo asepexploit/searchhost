@@ -408,9 +408,20 @@
           <i class="bi bi-cloud-upload"></i> Kirim & Hapus
         </button>
       </div>
-      <div class="col-12">
+      <div class="col-12 col-md-6">
         <input type="password" class="form-control" name="api_key" value=""
                placeholder="API key khusus buat pengiriman ini (kosongkan = pakai API key global)" autocomplete="off">
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="input-group">
+          <span class="input-group-text">Lewati file lebih dari</span>
+          <input type="number" class="form-control" name="max_size_mb" min="0" value="100">
+          <span class="input-group-text">MB</span>
+        </div>
+      </div>
+      <div class="form-text">
+        File yang ukurannya lebih besar dari batas ini DILEWATI (gak dikirim, tetap di
+        lokal) -- isi 0 kalau gak mau ada batas sama sekali.
       </div>
     </form>
   </div>
