@@ -372,6 +372,14 @@
         handleAutoParserBatch(item);
         return;
       }
+      if (item.type === "auto_parser_running") {
+        handleAutoParserRunning(item);
+        return;
+      }
+      if (item.type === "auto_domain_parser_running") {
+        handleAutoDomainParserRunning(item);
+        return;
+      }
       if (item.type === "delete") {
         removeDownloadRow(item.id);
         bumpStat("stat-total", -1);
@@ -530,6 +538,49 @@
     // (dihitung ulang server-side lewat DownloadStore.get_auto_parsed_status).
   }
 
+  // Tombol "Proses Sekarang" (keyword-mode per-profil DAN domain-mode) -- disable +
+  // spinner SELAMA batch itu lagi jalan (baik dipicu watcher otomatis maupun manual),
+  // biar gak bisa diklik dobel & user liat progressnya beneran "hidup" (bukan cuma
+  // redirect diam). State ASLI-nya tetap di server (`running_profile_ids` /
+  // `domain_parser_running`) -- UI ini cuma REFLEKSI, guard anti-dobel yang bener tetap
+  // di backend (lihat komentar route run-now).
+  function setRunNowButtonState(btn, running) {
+    if (!btn) return;
+    // Kalau `running` false, balikin ke apapun kondisi awalnya pas halaman dirender
+    // (disable kalau memang gak ada yang perlu diproses -- lihat `data-initial-disabled`
+    // di settings.html) -- BUKAN selalu enable, biar konsisten sama disable awal yang
+    // dihitung server-side (`pending_count == 0`, dst).
+    btn.disabled = running || btn.dataset.initialDisabled === "1";
+    const icon = btn.querySelector("i");
+    const label = btn.querySelector(".run-now-label");
+    if (icon) icon.className = running ? "spinner-border spinner-border-sm" : "bi bi-lightning-fill";
+    if (label) label.textContent = running ? "Sedang diproses..." : "Proses Sekarang";
+  }
+
+  function handleAutoParserRunning(item) {
+    setRunNowButtonState(document.getElementById(`auto-parser-run-now-${item.profile_id}`), item.running);
+  }
+
+  function handleAutoDomainParserRunning(item) {
+    setRunNowButtonState(document.getElementById("auto-domain-parser-run-now"), item.running);
+  }
+
+  function fetchAutoParserStatus() {
+    // Dipanggil sekali pas halaman dibuka -- nutup celah "connect WS SETELAH event
+    // running/selesai lewat" (mis. buka halaman Settings pas batch gede lagi jalan).
+    fetch("/api/auto-parser-status")
+      .then((r) => r.json())
+      .then((data) => {
+        (data.running_profile_ids || []).forEach((id) => {
+          setRunNowButtonState(document.getElementById(`auto-parser-run-now-${id}`), true);
+        });
+        if (data.domain_parser_running) {
+          setRunNowButtonState(document.getElementById("auto-domain-parser-run-now"), true);
+        }
+      })
+      .catch(() => {});
+  }
+
   function setupLiveClock() {
     const el = document.getElementById("live-clock-text");
     if (!el) return;
@@ -554,6 +605,7 @@
     setupLiveClock();
     setupGofileLogClear();
     fetchQueueStatus();
+    fetchAutoParserStatus();
     connect();
     // Re-render tiap detik walau gak ada event baru -- biar status "macet" (gak ada
     // event masuk lama) ke-update live, gak nunggu tick berikutnya yang mungkin gak

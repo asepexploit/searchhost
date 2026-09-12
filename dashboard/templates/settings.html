@@ -324,8 +324,11 @@
           </span>
           <div class="d-flex gap-2">
             <form method="post" action="/settings/auto-parser/{{ profile.id }}/run-now" class="mb-0">
-              <button type="submit" class="btn btn-outline-primary btn-sm" {{ 'disabled' if profile.pending_count == 0 else '' }}>
-                <i class="bi bi-lightning-fill"></i> Proses Sekarang
+              <button type="submit" class="btn btn-outline-primary btn-sm auto-parser-run-now-btn"
+                      id="auto-parser-run-now-{{ profile.id }}" data-profile-id="{{ profile.id }}"
+                      data-initial-disabled="{{ '1' if profile.pending_count == 0 else '0' }}"
+                      {{ 'disabled' if profile.pending_count == 0 else '' }}>
+                <i class="bi bi-lightning-fill"></i> <span class="run-now-label">Proses Sekarang</span>
               </button>
             </form>
             <form method="post" action="/settings/auto-parser/{{ profile.id }}/delete" class="mb-0"
@@ -548,8 +551,11 @@
         (target: {{ auto_domain_parser_target }})
       </span>
       <form method="post" action="/settings/auto-domain-parser/run-now" class="mb-0">
-        <button type="submit" class="btn btn-outline-primary btn-sm" {{ 'disabled' if auto_domain_parser_pending_count == 0 or auto_domain_parser_domain_count == 0 else '' }}>
-          <i class="bi bi-lightning-fill"></i> Proses Sekarang
+        <button type="submit" class="btn btn-outline-primary btn-sm auto-domain-parser-run-now-btn"
+                id="auto-domain-parser-run-now"
+                data-initial-disabled="{{ '1' if auto_domain_parser_pending_count == 0 or auto_domain_parser_domain_count == 0 else '0' }}"
+                {{ 'disabled' if auto_domain_parser_pending_count == 0 or auto_domain_parser_domain_count == 0 else '' }}>
+          <i class="bi bi-lightning-fill"></i> <span class="run-now-label">Proses Sekarang</span>
         </button>
       </form>
     </div>
