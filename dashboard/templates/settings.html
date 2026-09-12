@@ -260,10 +260,39 @@
           <div class="form-text mb-3">
             Kalau "Kirim ke API" aktif, hasil tiap batch (baris yang barusan cocok, bukan
             isi file gabungan) otomatis dikirim ke
-            <code>{{ mr4sep_api_url }}</code> (atur URL & API key-nya di kartu "API File
-            .txt" di bawah). "Hapus file lokal setelah terkirim" cuma berlaku KALAU
-            kirimnya BENERAN sukses -- kalau gagal kirim, file lokal TETAP disimpan (biar
-            gak ada yang ilang dua-duanya).
+            <code>{{ mr4sep_api_url }}</code>. "Hapus file lokal setelah terkirim" cuma
+            berlaku KALAU kirimnya BENERAN sukses -- kalau gagal kirim, file lokal TETAP
+            disimpan (biar gak ada yang ilang dua-duanya).
+          </div>
+
+          <div class="row g-2 align-items-end mb-2">
+            <div class="col-12 col-md-6">
+              <label class="form-label small text-muted mb-1">
+                API Key khusus profil ini (kosongkan = pakai API key global)
+                {% if profile.api_key_set %}
+                  <span class="badge text-bg-success">terpasang</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">pakai global</span>
+                {% endif %}
+              </label>
+              <input type="password" class="form-control" name="api_key" value=""
+                     placeholder="{{ '•••• (kosongkan biar gak berubah)' if profile.api_key_set else 'kosong = pakai API key global' }}"
+                     autocomplete="off">
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="clear_api_key" value="1"
+                       id="auto-parser-clear-api-key-{{ profile.id }}">
+                <label class="form-check-label small" for="auto-parser-clear-api-key-{{ profile.id }}">
+                  Hapus API key khusus ini (balik pakai API key global)
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="form-text mb-3">
+            Beda profil bisa punya API key SENDIRI (mis. masuk ke bucket/tujuan yang
+            beda-beda) -- kosongkan & simpan buat MEMPERTAHANKAN pengaturan saat ini,
+            centang "Hapus API key khusus" buat balik pakai API key global lagi.
           </div>
           <button type="submit" class="btn btn-primary btn-sm">
             <i class="bi bi-save"></i> Simpan
@@ -362,6 +391,10 @@
         <button type="submit" class="btn btn-outline-primary w-100">
           <i class="bi bi-cloud-upload"></i> Kirim & Hapus
         </button>
+      </div>
+      <div class="col-12">
+        <input type="password" class="form-control" name="api_key" value=""
+               placeholder="API key khusus buat pengiriman ini (kosongkan = pakai API key global)" autocomplete="off">
       </div>
     </form>
   </div>
