@@ -230,10 +230,17 @@
             <label class="form-label small text-muted mb-1">Maks baris per file</label>
             <input type="number" class="form-control" name="max_lines" min="1" value="{{ profile.max_lines }}">
           </div>
+          <div class="col-12 col-md-6 mb-2">
+            <label class="form-label small text-muted mb-1">Maks ukuran per file (MB)</label>
+            <input type="number" class="form-control" name="max_size_mb" min="0" value="{{ profile.max_size_mb }}">
+          </div>
           <div class="form-text mb-3">
             Kalau OFF (default), tiap batch selalu bikin file <code>.txt</code> baru
             sendiri. Kalau ON, hasil batch digabung (append) ke file yang sama sampai
-            jumlah barisnya nyentuh batas di atas -- baru setelah itu bikin file baru.
+            jumlah barisnya ATAU ukurannya (MB, isi 0 = gak ada batas ukuran) nyentuh
+            batas di atas -- baru setelah salah satu batas itu kesentuh, bikin file
+            baru. Catatan: 1 file bisa sedikit lewat batas (sebesar 1 batch tambahan)
+            sebelum file baru beneran dibikin -- ini wajar, bukan bug.
           </div>
 
           <hr>
