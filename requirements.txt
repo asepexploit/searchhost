@@ -9,3 +9,4 @@ tzdata>=2024.1
 python-multipart>=0.0.9
 python-dotenv>=1.0
 cryptography>=42.0
+flashtext>=2.7
