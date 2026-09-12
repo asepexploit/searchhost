@@ -380,6 +380,14 @@
         handleAutoDomainParserRunning(item);
         return;
       }
+      if (item.type === "auto_parser_progress") {
+        setProgressBar(document.getElementById(`auto-parser-progress-${item.profile_id}`), item.percent);
+        return;
+      }
+      if (item.type === "auto_domain_parser_progress") {
+        setProgressBar(document.getElementById("auto-domain-parser-progress"), item.percent);
+        return;
+      }
       if (item.type === "delete") {
         removeDownloadRow(item.id);
         bumpStat("stat-total", -1);
@@ -557,12 +565,31 @@
     if (label) label.textContent = running ? "Sedang diproses..." : "Proses Sekarang";
   }
 
+  // Progress bar SELAMA batch berjalan -- disembunyikan & di-reset ke 0% pas
+  // running=false (baik krn kelar ATAU krn belum ada batch sama sekali), biar gak
+  // nyangkut di persentase LAMA (mis. "80%") pas dilihat lagi buat batch berikutnya.
+  function setProgressBar(el, percent) {
+    if (!el) return;
+    el.hidden = false;
+    const bar = el.querySelector(".progress-bar");
+    if (bar) bar.style.width = `${percent}%`;
+  }
+
+  function resetProgressBar(el) {
+    if (!el) return;
+    el.hidden = true;
+    const bar = el.querySelector(".progress-bar");
+    if (bar) bar.style.width = "0%";
+  }
+
   function handleAutoParserRunning(item) {
     setRunNowButtonState(document.getElementById(`auto-parser-run-now-${item.profile_id}`), item.running);
+    if (!item.running) resetProgressBar(document.getElementById(`auto-parser-progress-${item.profile_id}`));
   }
 
   function handleAutoDomainParserRunning(item) {
     setRunNowButtonState(document.getElementById("auto-domain-parser-run-now"), item.running);
+    if (!item.running) resetProgressBar(document.getElementById("auto-domain-parser-progress"));
   }
 
   function fetchAutoParserStatus() {

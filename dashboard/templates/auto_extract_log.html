@@ -4,9 +4,16 @@
 
 {% block content %}
 <div class="card">
-  <div class="card-header">
-    <span>Log Kegagalan</span>
-    <span class="badge text-bg-secondary">{{ failures|length }} tersimpan (maks 300 terbaru)</span>
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Log Kegagalan
+      <span class="badge text-bg-secondary ms-1">{{ failures|length }} tersimpan (maks 300 terbaru)</span>
+    </span>
+    <form method="post" action="/auto-extract-log/clear" class="mb-0"
+          onsubmit="return confirm('Hapus SEMUA log kegagalan? Ini gak bisa dibatalkan.');">
+      <button type="submit" class="btn btn-outline-danger btn-sm" {{ 'disabled' if failures|length == 0 else '' }}>
+        <i class="bi bi-trash3"></i> Bersihkan Log
+      </button>
+    </form>
   </div>
   <p class="text-muted small px-3 pt-3 mb-0">
     Tiap kali 1 batch auto-extract (keyword ATAU per-domain) gagal diproses -- setelah

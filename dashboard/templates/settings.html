@@ -339,6 +339,10 @@
             </form>
           </div>
         </div>
+        <div class="progress mt-2 auto-parser-progress" id="auto-parser-progress-{{ profile.id }}"
+             style="height:6px;" hidden>
+          <div class="progress-bar" role="progressbar" style="width:0%"></div>
+        </div>
       </div>
     </div>
     {% endfor %}
@@ -558,6 +562,9 @@
           <i class="bi bi-lightning-fill"></i> <span class="run-now-label">Proses Sekarang</span>
         </button>
       </form>
+    </div>
+    <div class="progress mt-2 auto-parser-progress" id="auto-domain-parser-progress" style="height:6px;" hidden>
+      <div class="progress-bar" role="progressbar" style="width:0%"></div>
     </div>
   </div>
 </div>
