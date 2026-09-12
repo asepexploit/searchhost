@@ -192,13 +192,22 @@
               <input type="text" class="form-control" name="output_dir" value="{{ profile.output_dir or '' }}" placeholder="mis. clientarea-hasil">
             </div>
           </div>
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted mb-1">Maks percobaan ulang kalau gagal</label>
+              <input type="number" class="form-control" name="max_retries" min="1" max="10" value="{{ profile.max_retries }}">
+            </div>
+          </div>
           <div class="form-text mb-3">
             Hasilnya disimpan ke <code>{{ profile.output_dir_display }}</code>.
             Kosongkan folder output buat pakai default (<code>parsed_data/auto/</code>) --
             isi buat custom (mis. "clientarea-hasil" nyimpen ke
             <code>parsed_data/clientarea-hasil/</code>). File lama yang sudah ada SEBELUM
             toggle ini pertama kali diaktifkan TIDAK ikut dihitung (dianggap sudah lewat)
-            -- cuma file baru sejak toggle diaktifkan yang dihitung PROFIL INI.
+            -- cuma file baru sejak toggle diaktifkan yang dihitung PROFIL INI. Kalau 1
+            batch gagal diproses (mis. folder lagi kepake sesaat), dicoba ulang otomatis
+            sampai sejumlah "Maks percobaan ulang" ini SEBELUM nunggu event berikutnya --
+            kegagalannya kecatet di <a href="/auto-extract-log">Log Auto-Extract</a>.
           </div>
 
           <hr>
@@ -423,9 +432,15 @@
           Auto Extract per Domain -- {{ 'Aktif' if auto_domain_parser_enabled else 'Nonaktif' }}
         </label>
       </div>
-      <div class="col-12 col-md-6 mb-2">
-        <label class="form-label small text-muted mb-1">Target file per batch</label>
-        <input type="number" class="form-control" name="target" min="1" value="{{ auto_domain_parser_target }}">
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">Target file per batch</label>
+          <input type="number" class="form-control" name="target" min="1" value="{{ auto_domain_parser_target }}">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">Maks percobaan ulang kalau gagal (per domain)</label>
+          <input type="number" class="form-control" name="max_retries" min="1" max="10" value="{{ auto_domain_parser_max_retries }}">
+        </div>
       </div>
       <div class="form-text mb-3">
         Beda dari Auto Text Parser/Extractor di atas -- fitur ini gak pakai 1 keyword
@@ -435,7 +450,10 @@
         <code>example.com</code>). Begitu file baru numpuk sejumlah target, tiap domain
         di-scan sendiri-sendiri, hasilnya disimpan ke file TERPISAH per domain di
         <code>parsed_data/auto-datafolder/&lt;domain&gt;_login_pass.txt</code>
-        (menumpuk terus, bukan dibikin file baru tiap batch). Saat ini terdeteksi
+        (menumpuk terus, bukan dibikin file baru tiap batch). Kalau scan/tulis 1 domain
+        gagal, dicoba ulang sampai sejumlah "Maks percobaan ulang" SEBELUM domain itu
+        dilewati (domain lain di batch yang sama tetap lanjut) -- kegagalannya kecatet di
+        <a href="/auto-extract-log">Log Auto-Extract</a>. Saat ini terdeteksi
         <strong>{{ auto_domain_parser_domain_count }}</strong> domain unik di list-hosting.txt.
       </div>
 

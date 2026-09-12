@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block page_title %}Log Auto-Extract{% endblock %}
+{% block page_subtitle %}Riwayat kegagalan Auto Text Parser/Extractor & Auto Extractor per Domain -- gak perlu buka terminal/console{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span>Log Kegagalan</span>
+    <span class="badge text-bg-secondary">{{ failures|length }} tersimpan (maks 300 terbaru)</span>
+  </div>
+  <p class="text-muted small px-3 pt-3 mb-0">
+    Tiap kali 1 batch auto-extract (keyword ATAU per-domain) gagal diproses -- setelah
+    semua percobaan ulang habis, atau per-domain yang gagal terus -- kegagalannya dicatat
+    di sini apa adanya. File yang gagal TETAP "belum diproses" (bukan ke-anggep sudah) dan
+    otomatis dicoba lagi begitu ada download baru masuk. Kolom <strong>Sumber</strong>
+    nunjukin profil mana (<code>keyword#&lt;id&gt;</code>) atau <code>domain</code>
+    (Auto Extractor per Domain) yang gagal.
+  </p>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>Sumber</th>
+          <th>Pesan</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if failures|length == 0 %}
+        <tr>
+          <td colspan="3">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-check-circle"></i></span>
+              <p>Belum ada kegagalan tercatat -- semua batch auto-extract berjalan lancar sejauh ini.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for f in failures %}
+        <tr>
+          <td data-iso="{{ f.ts }}">{{ f.ts }}</td>
+          <td><span class="badge text-bg-secondary">{{ f.source }}</span></td>
+          <td class="small">{{ f.message }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

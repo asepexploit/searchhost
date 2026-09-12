@@ -41,6 +41,9 @@
         <a class="nav-link {{ 'active' if request.url.path == '/parser' else '' }}" href="/parser">
           <span class="nav-icon"><i class="bi bi-filter-square-fill"></i></span> <span>Text Parser/Extractor</span>
         </a>
+        <a class="nav-link {{ 'active' if request.url.path == '/auto-extract-log' else '' }}" href="/auto-extract-log">
+          <span class="nav-icon"><i class="bi bi-exclamation-triangle-fill"></i></span> <span>Log Auto-Extract</span>
+        </a>
 
         <div class="nav-section">Hosting Checker</div>
         <a class="nav-link {{ 'active' if request.url.path == '/hosting-checker' else '' }}" href="/hosting-checker">
