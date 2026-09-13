@@ -380,6 +380,14 @@
         handleAutoDomainParserRunning(item);
         return;
       }
+      if (item.type === "bot_search_running") {
+        handleBotSearchRunning(item);
+        return;
+      }
+      if (item.type === "bot_search_next_run") {
+        handleBotSearchNextRun(item);
+        return;
+      }
       if (item.type === "auto_parser_progress") {
         setProgressBar(document.getElementById(`auto-parser-progress-${item.profile_id}`), item.percent);
         return;
@@ -592,6 +600,59 @@
     if (!item.running) resetProgressBar(document.getElementById("auto-domain-parser-progress"));
   }
 
+  // Auto Search Bot: tombol "Jalankan Sekarang" pakai label beda (bukan "Proses
+  // Sekarang"/"Sedang diproses...") jadi gak pakai setRunNowButtonState yang sama persis
+  // -- helper sendiri, sama polanya (disable+spinner pas jalan, balik ke kondisi awal
+  // pas kelar).
+  function setBotSearchRunNowState(btn, running) {
+    if (!btn) return;
+    btn.disabled = running || btn.dataset.initialDisabled === "1";
+    const icon = btn.querySelector("i");
+    const label = btn.querySelector(".run-now-label");
+    if (icon) icon.className = running ? "spinner-border spinner-border-sm" : "bi bi-lightning-fill";
+    if (label) label.textContent = running ? "Sedang jalan..." : "Jalankan Sekarang";
+  }
+
+  function handleBotSearchRunning(item) {
+    setBotSearchRunNowState(document.getElementById(`bot-search-run-now-${item.profile_id}`), item.running);
+    const countdownEl = document.getElementById(`bot-search-countdown-${item.profile_id}`);
+    if (countdownEl) {
+      countdownEl.dataset.running = item.running ? "1" : "0";
+      if (item.running) countdownEl.textContent = "Lagi jalan sekarang...";
+    }
+  }
+
+  function handleBotSearchNextRun(item) {
+    const countdownEl = document.getElementById(`bot-search-countdown-${item.profile_id}`);
+    if (!countdownEl) return;
+    countdownEl.dataset.nextRunAt = item.next_run_at;
+    countdownEl.dataset.running = "0";
+  }
+
+  function fmtCountdown(secondsLeft) {
+    if (secondsLeft <= 0) return "sebentar lagi...";
+    const m = Math.floor(secondsLeft / 60);
+    const s = Math.floor(secondsLeft % 60);
+    if (m <= 0) return `${s}s lagi`;
+    return `${m}m ${s}s lagi`;
+  }
+
+  function tickBotSearchCountdowns() {
+    document.querySelectorAll(".bot-search-countdown").forEach((el) => {
+      if (el.dataset.running === "1") {
+        el.textContent = "Lagi jalan sekarang...";
+        return;
+      }
+      const nextRunAt = parseFloat(el.dataset.nextRunAt || "");
+      if (!nextRunAt) {
+        el.textContent = "";
+        return;
+      }
+      const secondsLeft = nextRunAt - Date.now() / 1000;
+      el.textContent = `Cari lagi dalam ${fmtCountdown(secondsLeft)}`;
+    });
+  }
+
   function fetchAutoParserStatus() {
     // Dipanggil sekali pas halaman dibuka -- nutup celah "connect WS SETELAH event
     // running/selesai lewat" (mis. buka halaman Settings pas batch gede lagi jalan).
@@ -604,6 +665,28 @@
         if (data.domain_parser_running) {
           setRunNowButtonState(document.getElementById("auto-domain-parser-run-now"), true);
         }
+      })
+      .catch(() => {});
+  }
+
+  function fetchBotSearchStatus() {
+    // Sama alasan kayak fetchAutoParserStatus() di atas, khusus halaman /bot-search --
+    // dipanggil sekali pas halaman dibuka biar tombol "Jalankan Sekarang" & countdown
+    // langsung akurat (nutup celah "connect WS setelah event lewat").
+    if (!document.querySelector(".bot-search-countdown")) return;
+    fetch("/api/bot-search-status")
+      .then((r) => r.json())
+      .then((data) => {
+        (data.running_profile_ids || []).forEach((id) => {
+          setBotSearchRunNowState(document.getElementById(`bot-search-run-now-${id}`), true);
+          const el = document.getElementById(`bot-search-countdown-${id}`);
+          if (el) el.dataset.running = "1";
+        });
+        Object.entries(data.next_run_at || {}).forEach(([id, ts]) => {
+          const el = document.getElementById(`bot-search-countdown-${id}`);
+          if (el && el.dataset.running !== "1") el.dataset.nextRunAt = ts;
+        });
+        tickBotSearchCountdowns();
       })
       .catch(() => {});
   }
@@ -633,6 +716,11 @@
     setupGofileLogClear();
     fetchQueueStatus();
     fetchAutoParserStatus();
+    if (document.querySelector(".bot-search-countdown")) {
+      tickBotSearchCountdowns();
+      setInterval(tickBotSearchCountdowns, 1000);
+    }
+    fetchBotSearchStatus();
     connect();
     // Re-render tiap detik walau gak ada event baru -- biar status "macet" (gak ada
     // event masuk lama) ke-update live, gak nunggu tick berikutnya yang mungkin gak

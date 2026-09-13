@@ -22,9 +22,25 @@
 <div class="card mb-3">
   <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <span>{{ profile.name or ('Bot #' ~ profile.id) }}{{ ' -- @' ~ profile.bot_username if profile.bot_username else '' }}</span>
-    <span class="badge {{ 'text-bg-success' if profile.enabled else 'text-bg-secondary' }}">
-      {{ 'Aktif' if profile.enabled else 'Nonaktif' }}
-    </span>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="small text-muted bot-search-countdown" id="bot-search-countdown-{{ profile.id }}"
+            data-next-run-at="{{ profile.next_run_at or '' }}" data-running="{{ '1' if profile.running else '0' }}"></span>
+      <form method="post" action="/bot-search/{{ profile.id }}/run-now" class="mb-0">
+        <button type="submit" class="btn btn-outline-primary btn-sm bot-search-run-now-btn"
+                id="bot-search-run-now-{{ profile.id }}" data-profile-id="{{ profile.id }}"
+                data-initial-disabled="{{ '1' if not profile.enabled else '0' }}"
+                {{ 'disabled' if not profile.enabled or profile.running else '' }}>
+          {% if profile.running %}
+          <i class="spinner-border spinner-border-sm"></i> <span class="run-now-label">Sedang jalan...</span>
+          {% else %}
+          <i class="bi bi-lightning-fill"></i> <span class="run-now-label">Jalankan Sekarang</span>
+          {% endif %}
+        </button>
+      </form>
+      <span class="badge {{ 'text-bg-success' if profile.enabled else 'text-bg-secondary' }}">
+        {{ 'Aktif' if profile.enabled else 'Nonaktif' }}
+      </span>
+    </div>
   </div>
   <div class="card-body">
     <form method="post" action="/bot-search/{{ profile.id }}">
