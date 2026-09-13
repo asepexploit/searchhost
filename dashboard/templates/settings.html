@@ -469,18 +469,49 @@
       </div>
       <div class="form-text mb-3">
         Beda dari Auto Text Parser/Extractor di atas -- fitur ini gak pakai 1 keyword
-        tetap, tapi otomatis ambil daftar domain dari
-        <code>ngehostutama/list-hosting.txt</code> (subdomain otomatis dibuang, cuma
-        root domain-nya yang dipakai, mis. <code>toko.example.com</code> jadi
-        <code>example.com</code>). Begitu file baru numpuk sejumlah target, tiap domain
-        di-scan sendiri-sendiri, hasilnya disimpan ke file TERPISAH per domain di
+        tetap, tapi otomatis ambil daftar domain dari API "Skema &amp; Data" mr4sep
+        (kolom <code>url</code>, subdomain otomatis dibuang, cuma root domain-nya yang
+        dipakai, mis. <code>toko.example.com</code> jadi <code>example.com</code>).
+        Begitu file baru numpuk sejumlah target, semua domain di-scan SEKALIGUS dalam 1x
+        baca (bukan 1x scan per domain), hasilnya disimpan ke file TERPISAH per domain di
         <code>parsed_data/auto-datafolder/&lt;domain&gt;_login_pass.txt</code>
-        (menumpuk terus, bukan dibikin file baru tiap batch). Kalau scan/tulis 1 domain
-        gagal, dicoba ulang sampai sejumlah "Maks percobaan ulang" SEBELUM domain itu
-        dilewati (domain lain di batch yang sama tetap lanjut) -- kegagalannya kecatet di
+        (menumpuk terus, bukan dibikin file baru tiap batch). Kalau scan gabungan gagal,
+        dicoba ulang sampai sejumlah "Maks percobaan ulang" SEBELUM batch itu dilewati
+        (dicoba lagi event berikutnya) -- kegagalannya kecatet di
         <a href="/auto-extract-log">Log Auto-Extract</a>. Saat ini terdeteksi
-        <strong>{{ auto_domain_parser_domain_count }}</strong> domain unik di list-hosting.txt.
+        <strong>{{ auto_domain_parser_domain_count }}</strong> domain unik dari API.
       </div>
+
+      <hr>
+
+      <h6 class="mb-2">Sumber Daftar Domain (API Skema &amp; Data)</h6>
+      <div class="form-text mb-3">
+        Kolom skema yang dibaca SELALU <code>url</code> -- API key di sini beda dari
+        API key "Kirim ke API" di bawah (itu buat KIRIM hasil, ini buat AMBIL daftar
+        domainnya).
+      </div>
+      <form method="post" action="/settings/domain-source-api" class="mb-3">
+        <div class="row g-2 mb-2">
+          <div class="col-12 col-md-8">
+            <label class="form-label small text-muted mb-1">URL API</label>
+            <input type="text" class="form-control" name="api_url" value="{{ domain_source_api_url }}">
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label small text-muted mb-1">
+              API Key
+              {% if domain_source_api_key_set %}
+                <span class="badge text-bg-success">sudah diisi</span>
+              {% else %}
+                <span class="badge text-bg-secondary">belum diisi</span>
+              {% endif %}
+            </label>
+            <input type="password" class="form-control" name="api_key" value="" placeholder="{{ '•••• (kosongkan biar gak berubah)' if domain_source_api_key_set else 'isi API key' }}" autocomplete="off">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-save"></i> Simpan Sumber Domain
+        </button>
+      </form>
 
       <hr>
 
