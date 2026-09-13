@@ -10,9 +10,12 @@
   target dipakai buat inget domain mana yang udah pernah dikirim ke bot ini biar gak diulang
   terus-terusan. Tiap beberapa menit (acak, sesuai jeda di bawah), 1 domain dari sumber yang
   BELUM ada di target dikirim ke bot lewat command yang diisi (mis. <code>/search {{ '{domain}' }}</code>),
-  kalau bot minta klik tombol konfirmasi dulu (bisa berlapis) itu diikuti otomatis sesuai
-  "Langkah Klik" yang diisi, baru kalau akhirnya dibalas file <code>.txt</code> langsung
-  didownload seperti auto-download biasa.
+  kalau bot minta konfirmasi dulu (klik tombol dan/atau balas teks, bisa berlapis) itu
+  diikuti otomatis sesuai "Langkah Lanjutan" yang diisi, baru kalau akhirnya dibalas file
+  <code>.txt</code> langsung didownload seperti auto-download biasa DAN domain itu baru
+  ditandai ke skema TARGET. Kalau bot gagal balas file (timeout, error, atau semua langkah
+  abis tapi gak dapat file), domain TETAP nganggur di skema sumber (gak ditandai) supaya
+  dicoba lagi otomatis di putaran berikutnya.
 </div>
 
 {% for profile in profiles %}
@@ -53,20 +56,47 @@
         </div>
       </div>
       <div class="row g-2 mb-2">
-        <div class="col-12 col-md-6">
+        <div class="col-12">
           <label class="form-label small text-muted mb-1">Template command (pakai <code>{domain}</code>)</label>
           <input type="text" class="form-control" name="command_template" value="{{ profile.command_template }}" placeholder="/search {domain}">
         </div>
-        <div class="col-12 col-md-6">
-          <label class="form-label small text-muted mb-1">Langkah Klik (1 baris = 1 tombol, urut)</label>
-          <textarea class="form-control" name="click_steps_raw" rows="1" placeholder="url:login:pass">{{ profile.click_steps_list|join('\n') }}</textarea>
-        </div>
       </div>
+
+      <label class="form-label small text-muted mb-1">Langkah Lanjutan (kalau bot minta konfirmasi dulu)</label>
+      <div class="bot-search-steps mb-2" data-steps-container>
+        {% for step in profile.click_steps_list %}
+        <div class="row g-2 mb-2 align-items-center" data-step-row>
+          <div class="col-12 col-md-3">
+            <select class="form-select" name="step_type">
+              <option value="click" {{ 'selected' if step.type == 'click' else '' }}>Klik Tombol</option>
+              <option value="text" {{ 'selected' if step.type == 'text' else '' }}>Kirim Teks</option>
+            </select>
+          </div>
+          <div class="col-10 col-md-8">
+            <input type="text" class="form-control" name="step_value" value="{{ step.value }}"
+                   placeholder="mis. url:login:pass, atau {domain}">
+          </div>
+          <div class="col-2 col-md-1">
+            <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-step>
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="btn btn-outline-secondary btn-sm mb-3" data-add-step>
+        <i class="bi bi-plus-lg"></i> Tambah Langkah
+      </button>
       <div class="form-text mb-3">
-        Kosongkan "Langkah Klik" kalau bot ini LANGSUNG balas file tanpa tombol konfirmasi
-        apa pun. Isi 1 baris per teks tombol (cocok PERSIS, gak peduli besar-kecil huruf)
-        kalau bot minta klik dulu -- 2 baris berarti klik tombol pertama dulu, TUNGGU
-        balasan baru, baru klik tombol kedua (buat bot yang konfirmasinya berlapis).
+        Kosongkan (gak ada langkah sama sekali) kalau bot ini LANGSUNG balas file tanpa
+        konfirmasi apa pun. Kalau bot minta konfirmasi, tambah langkah BERURUTAN sesuai
+        alurnya -- <strong>Klik Tombol</strong>: isi teks tombol yang mau diklik (cocok
+        PERSIS, gak peduli besar-kecil huruf). <strong>Kirim Teks</strong>: isi teks yang
+        mau dikirim sebagai BALASAN PESAN BIASA (bisa pakai <code>{domain}</code> buat
+        kirim ulang domain yang sama) -- buat bot yang minta user KETIK ULANG sesuatu,
+        bukan cuma klik tombol. Contoh alur "klik tombol lalu diminta ketik ulang domain":
+        2 langkah -- <em>Klik Tombol</em> (isi teks tombolnya), lalu <em>Kirim Teks</em>
+        (isi <code>{domain}</code>).
       </div>
 
       <hr>
@@ -215,4 +245,51 @@
     </table>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  function makeStepRow() {
+    var row = document.createElement('div');
+    row.className = 'row g-2 mb-2 align-items-center';
+    row.setAttribute('data-step-row', '');
+    row.innerHTML =
+      '<div class="col-12 col-md-3">' +
+        '<select class="form-select" name="step_type">' +
+          '<option value="click">Klik Tombol</option>' +
+          '<option value="text">Kirim Teks</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="col-10 col-md-8">' +
+        '<input type="text" class="form-control" name="step_value" value="" ' +
+               'placeholder="mis. url:login:pass, atau {domain}">' +
+      '</div>' +
+      '<div class="col-2 col-md-1">' +
+        '<button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-step>' +
+          '<i class="bi bi-x-lg"></i>' +
+        '</button>' +
+      '</div>';
+    return row;
+  }
+
+  document.addEventListener('click', function (ev) {
+    var addBtn = ev.target.closest('[data-add-step]');
+    if (addBtn) {
+      var container = addBtn.previousElementSibling;
+      if (container && container.hasAttribute('data-steps-container')) {
+        container.appendChild(makeStepRow());
+      }
+      return;
+    }
+    var removeBtn = ev.target.closest('[data-remove-step]');
+    if (removeBtn) {
+      var row = removeBtn.closest('[data-step-row]');
+      if (row) {
+        row.remove();
+      }
+    }
+  });
+})();
+</script>
 {% endblock %}
