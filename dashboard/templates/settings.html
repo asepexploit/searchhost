@@ -436,6 +436,41 @@
 
 <div class="card mb-3">
   <div class="card-header">
+    <span><i class="bi bi-globe2 me-2 text-primary"></i>Sumber Daftar Domain (API Skema &amp; Data)</span>
+  </div>
+  <div class="card-body">
+    <div class="form-text mb-3">
+      Dipakai fitur "Auto Extractor per Domain" di bawah -- kolom skema yang dibaca
+      SELALU <code>url</code>. API key di sini beda dari API key "Kirim ke API" di
+      card berikutnya (itu buat KIRIM hasil ke API, ini buat AMBIL daftar domainnya).
+    </div>
+    <form method="post" action="/settings/domain-source-api" class="mb-0">
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-8">
+          <label class="form-label small text-muted mb-1">URL API</label>
+          <input type="text" class="form-control" name="api_url" value="{{ domain_source_api_url }}">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">
+            API Key
+            {% if domain_source_api_key_set %}
+              <span class="badge text-bg-success">sudah diisi</span>
+            {% else %}
+              <span class="badge text-bg-secondary">belum diisi</span>
+            {% endif %}
+          </label>
+          <input type="password" class="form-control" name="api_key" value="" placeholder="{{ '•••• (kosongkan biar gak berubah)' if domain_source_api_key_set else 'isi API key' }}" autocomplete="off">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-save"></i> Simpan Sumber Domain
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
     <span><i class="bi bi-globe2 me-2 text-primary"></i>Auto Extractor per Domain</span>
     <span class="badge {{ 'text-bg-success' if auto_domain_parser_enabled else 'text-bg-secondary' }}">
       {{ 'Aktif' if auto_domain_parser_enabled else 'Nonaktif' }}
@@ -481,37 +516,6 @@
         <a href="/auto-extract-log">Log Auto-Extract</a>. Saat ini terdeteksi
         <strong>{{ auto_domain_parser_domain_count }}</strong> domain unik dari API.
       </div>
-
-      <hr>
-
-      <h6 class="mb-2">Sumber Daftar Domain (API Skema &amp; Data)</h6>
-      <div class="form-text mb-3">
-        Kolom skema yang dibaca SELALU <code>url</code> -- API key di sini beda dari
-        API key "Kirim ke API" di bawah (itu buat KIRIM hasil, ini buat AMBIL daftar
-        domainnya).
-      </div>
-      <form method="post" action="/settings/domain-source-api" class="mb-3">
-        <div class="row g-2 mb-2">
-          <div class="col-12 col-md-8">
-            <label class="form-label small text-muted mb-1">URL API</label>
-            <input type="text" class="form-control" name="api_url" value="{{ domain_source_api_url }}">
-          </div>
-          <div class="col-12 col-md-4">
-            <label class="form-label small text-muted mb-1">
-              API Key
-              {% if domain_source_api_key_set %}
-                <span class="badge text-bg-success">sudah diisi</span>
-              {% else %}
-                <span class="badge text-bg-secondary">belum diisi</span>
-              {% endif %}
-            </label>
-            <input type="password" class="form-control" name="api_key" value="" placeholder="{{ '•••• (kosongkan biar gak berubah)' if domain_source_api_key_set else 'isi API key' }}" autocomplete="off">
-          </div>
-        </div>
-        <button type="submit" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-save"></i> Simpan Sumber Domain
-        </button>
-      </form>
 
       <hr>
 
