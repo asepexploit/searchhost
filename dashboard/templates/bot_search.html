@@ -11,11 +11,15 @@
   terus-terusan. Tiap beberapa menit (acak, sesuai jeda di bawah), 1 domain dari sumber yang
   BELUM ada di target dikirim ke bot lewat command yang diisi (mis. <code>/search {{ '{domain}' }}</code>),
   kalau bot minta konfirmasi dulu (klik tombol dan/atau balas teks, bisa berlapis) itu
-  diikuti otomatis sesuai "Langkah Lanjutan" yang diisi, baru kalau akhirnya dibalas file
-  <code>.txt</code> langsung didownload seperti auto-download biasa DAN domain itu baru
-  ditandai ke skema TARGET. Kalau bot gagal balas file (timeout, error, atau semua langkah
-  abis tapi gak dapat file), domain TETAP nganggur di skema sumber (gak ditandai) supaya
-  dicoba lagi otomatis di putaran berikutnya.
+  diikuti otomatis sesuai "Langkah Lanjutan" yang diisi. Kalau ADA langkah yang diisi,
+  begitu LANGKAH TERAKHIR selesai dieksekusi langsung dianggap sukses & domain ditandai ke
+  skema TARGET -- <strong>tanpa nunggu file beneran nongol dulu</strong> (banyak bot ngirim
+  beberapa pesan status kayak "Query position", "Started search" dulu sebelum akhirnya
+  balas file, jadi gak bisa diandalkan buat nunggu file secara langsung); file-nya nanti
+  tetap ketangkep otomatis lewat auto-download biasa begitu bot akhirnya balas. Kalau
+  gagal (timeout nunggu balasan, atau gak ada langkah yang cocok sama sekali), domain
+  TETAP nganggur di skema sumber (gak ditandai) supaya dicoba lagi otomatis di putaran
+  berikutnya.
 </div>
 
 {% for profile in profiles %}
@@ -248,6 +252,8 @@
           <td>
             {% if f.status == 'downloaded' %}
               <span class="badge text-bg-success">downloaded</span>
+            {% elif f.status == 'sent' %}
+              <span class="badge text-bg-success">sent</span>
             {% elif f.status == 'timeout' %}
               <span class="badge text-bg-warning">timeout</span>
             {% else %}
