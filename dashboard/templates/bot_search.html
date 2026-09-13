@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block page_title %}Auto Search Bot{% endblock %}
+{% block page_subtitle %}Kirim command ke bot pihak ketiga secara otomatis buat cari data per domain{% endblock %}
+
+{% block content %}
+<div class="alert alert-secondary small">
+  <strong>Cara kerja:</strong> tiap profil di bawah punya SKEMA SUMBER (daftar domain yang
+  MAU dicari) dan SKEMA TARGET (daftar domain yang SUDAH dicari) -- keduanya API "Skema &amp;
+  Data" mr4sep, kolom <code>url</code>, TAPI harus skema yang BEDA (bukan yang sama), soalnya
+  target dipakai buat inget domain mana yang udah pernah dikirim ke bot ini biar gak diulang
+  terus-terusan. Tiap beberapa menit (acak, sesuai jeda di bawah), 1 domain dari sumber yang
+  BELUM ada di target dikirim ke bot lewat command yang diisi (mis. <code>/search {{ '{domain}' }}</code>),
+  kalau bot minta klik tombol konfirmasi dulu (bisa berlapis) itu diikuti otomatis sesuai
+  "Langkah Klik" yang diisi, baru kalau akhirnya dibalas file <code>.txt</code> langsung
+  didownload seperti auto-download biasa.
+</div>
+
+{% for profile in profiles %}
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>{{ profile.name or ('Bot #' ~ profile.id) }}{{ ' -- @' ~ profile.bot_username if profile.bot_username else '' }}</span>
+    <span class="badge {{ 'text-bg-success' if profile.enabled else 'text-bg-secondary' }}">
+      {{ 'Aktif' if profile.enabled else 'Nonaktif' }}
+    </span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/bot-search/{{ profile.id }}">
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch"
+               id="bot-search-toggle-{{ profile.id }}" name="enabled" value="1"
+               {{ 'checked' if profile.enabled else '' }}>
+        <label class="form-check-label" for="bot-search-toggle-{{ profile.id }}">
+          Auto Search -- {{ 'Aktif' if profile.enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">Nama profil (label doang)</label>
+          <input type="text" class="form-control" name="name" value="{{ profile.name }}" placeholder="mis. Bot Contoh">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">Username bot (tanpa @)</label>
+          <input type="text" class="form-control" name="bot_username" value="{{ profile.bot_username }}" placeholder="examplebot">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">Akun Telegram pengirim</label>
+          <select class="form-select" name="account_label">
+            <option value="">-- pilih akun --</option>
+            {% for acc in accounts %}
+            <option value="{{ acc }}" {{ 'selected' if profile.account_label == acc else '' }}>{{ acc }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">Template command (pakai <code>{domain}</code>)</label>
+          <input type="text" class="form-control" name="command_template" value="{{ profile.command_template }}" placeholder="/search {domain}">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">Langkah Klik (1 baris = 1 tombol, urut)</label>
+          <textarea class="form-control" name="click_steps_raw" rows="1" placeholder="url:login:pass">{{ profile.click_steps_list|join('\n') }}</textarea>
+        </div>
+      </div>
+      <div class="form-text mb-3">
+        Kosongkan "Langkah Klik" kalau bot ini LANGSUNG balas file tanpa tombol konfirmasi
+        apa pun. Isi 1 baris per teks tombol (cocok PERSIS, gak peduli besar-kecil huruf)
+        kalau bot minta klik dulu -- 2 baris berarti klik tombol pertama dulu, TUNGGU
+        balasan baru, baru klik tombol kedua (buat bot yang konfirmasinya berlapis).
+      </div>
+
+      <hr>
+
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">URL API skema SUMBER (daftar domain yang mau dicari)</label>
+          <input type="text" class="form-control" name="source_api_url" value="{{ profile.source_api_url }}">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">
+            API Key skema SUMBER
+            {% if profile.source_api_key_set %}
+              <span class="badge text-bg-success">sudah diisi</span>
+            {% else %}
+              <span class="badge text-bg-secondary">belum diisi</span>
+            {% endif %}
+          </label>
+          <input type="password" class="form-control" name="source_api_key" value=""
+                 placeholder="{{ '•••• (kosongkan biar gak berubah)' if profile.source_api_key_set else 'isi API key' }}" autocomplete="off">
+        </div>
+      </div>
+      {% if profile.source_api_key_set %}
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" name="clear_source_api_key" value="1" id="bot-search-clear-source-{{ profile.id }}">
+        <label class="form-check-label small" for="bot-search-clear-source-{{ profile.id }}">Hapus API key skema sumber ini</label>
+      </div>
+      {% endif %}
+
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">URL API skema TARGET (penanda "sudah di-search")</label>
+          <input type="text" class="form-control" name="target_api_url" value="{{ profile.target_api_url }}">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted mb-1">
+            API Key skema TARGET
+            {% if profile.target_api_key_set %}
+              <span class="badge text-bg-success">sudah diisi</span>
+            {% else %}
+              <span class="badge text-bg-secondary">belum diisi</span>
+            {% endif %}
+          </label>
+          <input type="password" class="form-control" name="target_api_key" value=""
+                 placeholder="{{ '•••• (kosongkan biar gak berubah)' if profile.target_api_key_set else 'isi API key' }}" autocomplete="off">
+        </div>
+      </div>
+      {% if profile.target_api_key_set %}
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="clear_target_api_key" value="1" id="bot-search-clear-target-{{ profile.id }}">
+        <label class="form-check-label small" for="bot-search-clear-target-{{ profile.id }}">Hapus API key skema target ini</label>
+      </div>
+      {% endif %}
+
+      <hr>
+
+      <div class="row g-2 mb-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">Jeda minimal (menit)</label>
+          <input type="number" class="form-control" name="min_delay_minutes" min="1" value="{{ profile.min_delay_minutes }}">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">Jeda maksimal (menit)</label>
+          <input type="number" class="form-control" name="max_delay_minutes" min="1" value="{{ profile.max_delay_minutes }}">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">Timeout tunggu balasan bot (detik)</label>
+          <input type="number" class="form-control" name="timeout_seconds" min="5" value="{{ profile.timeout_seconds }}">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-save"></i> Simpan
+        </button>
+      </div>
+    </form>
+    <form method="post" action="/bot-search/{{ profile.id }}/delete" class="mt-2 mb-0"
+          onsubmit="return confirm('Hapus profil bot ini? Riwayat log-nya TETAP ada di tabel bawah.');">
+      <button type="submit" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-trash"></i> Hapus Profil
+      </button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<form method="post" action="/bot-search/add" class="mb-3">
+  <button type="submit" class="btn btn-outline-primary">
+    <i class="bi bi-plus-lg"></i> Tambah Bot Baru
+  </button>
+</form>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Log Auto Search
+      <span class="badge text-bg-secondary ms-1">{{ failures|length }} tersimpan (maks 500 terbaru)</span>
+    </span>
+    <form method="post" action="/bot-search/log/clear" class="mb-0"
+          onsubmit="return confirm('Hapus SEMUA log Auto Search? Ini gak bisa dibatalkan.');">
+      <button type="submit" class="btn btn-outline-danger btn-sm" {{ 'disabled' if failures|length == 0 else '' }}>
+        <i class="bi bi-trash3"></i> Bersihkan Log
+      </button>
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>Profil</th>
+          <th>Domain</th>
+          <th>Status</th>
+          <th>Pesan</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if failures|length == 0 %}
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <span class="empty-state-icon"><i class="bi bi-search"></i></span>
+              <p>Belum ada riwayat Auto Search sejauh ini.</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% for f in failures %}
+        <tr>
+          <td data-iso="{{ f.ts }}">{{ f.ts }}</td>
+          <td><span class="badge text-bg-secondary">#{{ f.profile_id }}</span></td>
+          <td class="small">{{ f.domain }}</td>
+          <td>
+            {% if f.status == 'downloaded' %}
+              <span class="badge text-bg-success">downloaded</span>
+            {% elif f.status == 'timeout' %}
+              <span class="badge text-bg-warning">timeout</span>
+            {% else %}
+              <span class="badge text-bg-secondary">{{ f.status }}</span>
+            {% endif %}
+          </td>
+          <td class="small">{{ f.message }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
