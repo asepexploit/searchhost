@@ -184,8 +184,9 @@
               <input type="text" class="form-control" name="keyword" value="{{ profile.keyword }}" placeholder="mis. clientarea">
             </div>
             <div class="col-12 col-md-4">
-              <label class="form-label small text-muted mb-1">Target file per batch</label>
+              <label class="form-label small text-muted mb-1">Minimal file numpuk buat mulai</label>
               <input type="number" class="form-control" name="target" min="1" value="{{ profile.target }}">
+              <div class="form-text">Ambang MINIMAL, bukan batas maksimal -- begitu numpuk segini, SEMUA file yang lagi menunggu diproses sekaligus dalam 1 batch (bukan cuma sejumlah ini).</div>
             </div>
             <div class="col-12 col-md-4">
               <label class="form-label small text-muted mb-1">Folder output (kosongkan = default)</label>
@@ -320,7 +321,7 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
           <span class="text-muted small">
             <strong>{{ profile.pending_count }}</strong> file menunggu diproses
-            (target: {{ profile.target }})
+            (ambang minimal: {{ profile.target }})
           </span>
           <div class="d-flex gap-2">
             <form method="post" action="/settings/auto-parser/{{ profile.id }}/run-now" class="mb-0">
@@ -494,8 +495,9 @@
       </div>
       <div class="row g-2 mb-2">
         <div class="col-12 col-md-6">
-          <label class="form-label small text-muted mb-1">Target file per batch</label>
+          <label class="form-label small text-muted mb-1">Minimal file numpuk buat mulai</label>
           <input type="number" class="form-control" name="target" min="1" value="{{ auto_domain_parser_target }}">
+          <div class="form-text">Ambang MINIMAL, bukan batas maksimal -- begitu numpuk segini, SEMUA file yang lagi menunggu diproses sekaligus dalam 1 batch (bukan cuma sejumlah ini).</div>
         </div>
         <div class="col-12 col-md-6">
           <label class="form-label small text-muted mb-1">Maks percobaan ulang kalau gagal (per domain)</label>
@@ -587,7 +589,7 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
       <span class="text-muted small">
         <strong>{{ auto_domain_parser_pending_count }}</strong> file menunggu diproses
-        (target: {{ auto_domain_parser_target }})
+        (ambang minimal: {{ auto_domain_parser_target }})
       </span>
       <form method="post" action="/settings/auto-domain-parser/run-now" class="mb-0">
         <button type="submit" class="btn btn-outline-primary btn-sm auto-domain-parser-run-now-btn"
