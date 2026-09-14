@@ -163,10 +163,19 @@
     list.innerHTML = Array.from(activeDownloads.values())
       .map((p) => {
         const staleMs = typeof p._ts === "number" ? performance.now() - p._ts : 0;
-        const isStalled = !p.flood_wait_seconds && staleMs > STALL_THRESHOLD_MS;
-        const isWarn = p.flood_wait_seconds || isStalled;
-        const statusText = p.flood_wait_seconds
-          ? `<i class="bi bi-hourglass-split me-1"></i>Kena flood-wait, nunggu ${p.flood_wait_seconds}s...`
+        // `flood_wait_seconds` itu DURASI TOTAL dikirim SEKALI pas flood-wait mulai
+        // (server gak nge-loop kirim event tiap detik) -- kalau ditampilin apa
+        // adanya, angkanya keliatan STATIS/gak pernah berkurang sepanjang nunggu,
+        // bikin kayak macet padahal cuma nunggu biasa. Dihitung ulang di sini pakai
+        // `staleMs` (udah berapa lama sejak event itu diterima) biar keliatan LIVE
+        // berkurang tiap detik -- begitu sisa waktunya abis (<=0), floodWaitLeft jadi
+        // 0 & dianggap SELESAI (bukan flood-wait lagi), biar UI gak nyangkut nunjukin
+        // "flood-wait" padahal server-nya udah lanjut nyoba download ulang.
+        const floodWaitLeft = p.flood_wait_seconds ? Math.max(0, Math.ceil(p.flood_wait_seconds - staleMs / 1000)) : 0;
+        const isStalled = !floodWaitLeft && staleMs > STALL_THRESHOLD_MS;
+        const isWarn = floodWaitLeft > 0 || isStalled;
+        const statusText = floodWaitLeft > 0
+          ? `<i class="bi bi-hourglass-split me-1"></i>Kena flood-wait, nunggu ${fmtCountdown(floodWaitLeft)}...`
           : isStalled
           ? `<i class="bi bi-exclamation-triangle me-1"></i>Macet -- gak ada data masuk ${Math.round(staleMs / 1000)}s`
           : `${p.percent}%${p.total ? " &middot; " + fmtSize(p.total) : ""}${fmtSpeed(p._speed) ? " &middot; " + fmtSpeed(p._speed) : ""}`;
