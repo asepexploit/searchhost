@@ -9,6 +9,7 @@ sessions/*.session
 sessions/*.session-journal
 data/*.db
 data/.license_proof.json
+data/panel_agent_id.json
 download/*
 !download/.gitkeep
 parsed_data/*

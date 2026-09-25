@@ -472,6 +472,58 @@
 
 <div class="card mb-3">
   <div class="card-header">
+    <span><i class="bi bi-hdd-network me-2 text-primary"></i>Panel SearchHost (Monitoring)</span>
+  </div>
+  <div class="card-body">
+    <div class="form-text mb-3">
+      searchhost TETAP jalan penuh di sini -- kalau diaktifkan, cuma NAMBAH sinkronisasi
+      status/riwayat/disk ke panel VPS terpisah (biar bisa dipantau dari mana saja), dan
+      menjalankan job "Download Riwayat (Backfill)" kalau admin memintanya lewat panel itu.
+      Semua fitur lain (start/stop listener, run-now parser, Auto Search Bot, dst) TETAP
+      cuma dikontrol langsung di sini, panel tidak pernah menyentuhnya.
+    </div>
+    <form method="post" action="/settings/panel-sync" class="mb-0">
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch"
+               id="panel-sync-toggle" name="enabled" value="1"
+               {{ 'checked' if panel_sync_enabled else '' }}>
+        <label class="form-check-label" for="panel-sync-toggle">
+          Sinkron ke Panel -- {{ 'Aktif' if panel_sync_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-8">
+          <label class="form-label small text-muted mb-1">Base URL Panel</label>
+          <input type="text" class="form-control" name="base_url" value="{{ panel_base_url }}" placeholder="https://api.lpmterkam.org">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-muted mb-1">
+            Secret
+            {% if panel_secret_set %}
+              <span class="badge text-bg-success">sudah diisi</span>
+            {% else %}
+              <span class="badge text-bg-secondary">belum diisi</span>
+            {% endif %}
+          </label>
+          <input type="password" class="form-control" name="secret" value=""
+                 placeholder="{{ '•••• (kosongkan biar gak berubah)' if panel_secret_set else 'isi secret' }}" autocomplete="off">
+        </div>
+      </div>
+      {% if panel_secret_set %}
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="clear_secret" value="1" id="panel-sync-clear-secret">
+        <label class="form-check-label small" for="panel-sync-clear-secret">Hapus secret ini</label>
+      </div>
+      {% endif %}
+      <button type="submit" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-save"></i> Simpan Panel SearchHost
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
     <span><i class="bi bi-globe2 me-2 text-primary"></i>Auto Extractor per Domain</span>
     <span class="badge {{ 'text-bg-success' if auto_domain_parser_enabled else 'text-bg-secondary' }}">
       {{ 'Aktif' if auto_domain_parser_enabled else 'Nonaktif' }}
