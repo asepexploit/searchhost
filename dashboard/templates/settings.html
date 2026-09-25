@@ -279,32 +279,10 @@
             isi file gabungan) otomatis dikirim ke
             <code>{{ mr4sep_api_url }}</code>. "Hapus file lokal setelah terkirim" cuma
             berlaku KALAU kirimnya BENERAN sukses -- kalau gagal kirim, file lokal TETAP
-            disimpan (biar gak ada yang ilang dua-duanya).
-          </div>
-
-          <div class="form-check form-switch mb-2">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="auto-parser-delete-source-toggle-{{ profile.id }}"
-              name="delete_source_after_parse"
-              value="1"
-              {{ 'checked' if profile.delete_source_after_parse else '' }}
-            >
-            <label class="form-check-label" for="auto-parser-delete-source-toggle-{{ profile.id }}">
-              Hapus file DOWNLOAD asli setelah selesai di-parse -- {{ 'Aktif' if profile.delete_source_after_parse else 'Nonaktif' }}
-            </label>
-          </div>
-          <div class="form-text mb-3">
-            BEDA dari toggle "Hapus file lokal setelah terkirim" di atas (itu ngehapus
-            file HASIL/parsed_data setelah kekirim ke API). Ini ngehapus file
-            <strong>sumber/asli yang didownload</strong> (di folder download/) setelah
-            selesai di-scan profil ini -- gak peduli ada baris yang cocok atau enggak,
-            gak peduli "Kirim ke API" aktif atau enggak. Kalau ada profil lain yang juga
-            aktif dan belum sempat memproses file yang sama, file BARU dihapus setelah
-            SEMUA profil aktif selesai memprosesnya (bukan langsung setelah profil ini
-            saja) -- supaya profil lain tetap kebagian.
+            disimpan (biar gak ada yang ilang dua-duanya). Ada juga pengaturan TERPISAH
+            buat hapus file DOWNLOAD ASLI (bukan file hasil) -- lihat card "Hapus File
+            Download Setelah Diparse" di bawah, berlaku buat SEMUA fitur auto-extract
+            sekaligus (bukan per-profil).
           </div>
 
           <div class="row g-2 align-items-end mb-2">
@@ -626,26 +604,11 @@
           Hapus file lokal setelah terkirim -- {{ 'Aktif' if auto_domain_parser_delete_after_send else 'Nonaktif' }}
         </label>
       </div>
-      <div class="form-check form-switch mb-2">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="auto-domain-parser-delete-source-toggle"
-          name="delete_source_after_parse"
-          value="1"
-          {{ 'checked' if auto_domain_parser_delete_source_after_parse else '' }}
-        >
-        <label class="form-check-label" for="auto-domain-parser-delete-source-toggle">
-          Hapus file DOWNLOAD asli setelah selesai di-parse -- {{ 'Aktif' if auto_domain_parser_delete_source_after_parse else 'Nonaktif' }}
-        </label>
-      </div>
       <div class="form-text mb-3">
-        BEDA dari toggle "Hapus file lokal setelah terkirim" di atas (itu ngehapus file
-        HASIL/parsed_data setelah kekirim ke API). Ini ngehapus file
-        <strong>sumber/asli yang didownload</strong> (di folder download/) setelah
-        selesai di-scan terhadap SEMUA domain -- gak peduli ada baris yang cocok atau
-        enggak, gak peduli "Kirim ke API" aktif atau enggak.
+        "Hapus file lokal setelah terkirim" cuma berlaku KALAU kirimnya BENERAN sukses.
+        Ada juga pengaturan TERPISAH buat hapus file DOWNLOAD ASLI (bukan file hasil) --
+        lihat card "Hapus File Download Setelah Diparse" di bawah, berlaku buat SEMUA
+        fitur auto-extract sekaligus (bukan cuma fitur ini).
       </div>
       <div class="row g-2 align-items-end mb-2">
         <div class="col-12 col-md-6">
@@ -701,6 +664,52 @@
     <div class="progress mt-2 auto-parser-progress" id="auto-domain-parser-progress" style="height:6px;" hidden>
       <div class="progress-bar" role="progressbar" style="width:0%"></div>
     </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <span><i class="bi bi-trash3 me-2 text-primary"></i>Hapus File Download Setelah Diparse</span>
+    <span class="badge {{ 'text-bg-success' if delete_source_after_parse_enabled else 'text-bg-secondary' }}">
+      {{ 'Aktif' if delete_source_after_parse_enabled else 'Nonaktif' }}
+    </span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/settings/delete-source-after-parse">
+      <div class="form-check form-switch mb-2">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="delete-source-after-parse-toggle"
+          name="enabled"
+          value="1"
+          {{ 'checked' if delete_source_after_parse_enabled else '' }}
+        >
+        <label class="form-check-label" for="delete-source-after-parse-toggle">
+          Hapus file DOWNLOAD asli setelah selesai di-parse -- {{ 'Aktif' if delete_source_after_parse_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="form-text mb-3">
+        SATU pengaturan buat KEDUA fitur auto-extract di atas sekaligus (Auto Text
+        Parser/Extractor -- SEMUA profil, DAN Auto Extractor per Domain) -- BUKAN toggle
+        per-fitur. BEDA dari toggle "Hapus file lokal setelah terkirim" di masing-masing
+        card di atas (itu ngehapus file HASIL/parsed_data setelah kekirim ke API). Ini
+        ngehapus file <strong>sumber/asli yang didownload</strong> (di folder download/)
+        setelah selesai di-parse -- gak peduli ada baris yang cocok atau enggak, gak
+        peduli "Kirim ke API" aktif atau enggak.
+        <br><br>
+        File baru BENERAN dihapus setelah <strong>SEMUA fitur auto-extract yang lagi
+        aktif</strong> selesai memprosesnya (kalau Auto Text Parser/Extractor punya
+        beberapa profil aktif, SEMUA profil itu juga harus kelar dulu) -- bukan langsung
+        setelah salah satu fitur/profil selesai duluan. Ini sengaja digabung jadi 1
+        toggle (bukan 2 toggle terpisah kayak sebelumnya) supaya gak ada fitur yang
+        "kebobolan" filenya keburu hilang sebelum sempat kebagian giliran diproses.
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="bi bi-save"></i> Simpan
+      </button>
+    </form>
   </div>
 </div>
 
