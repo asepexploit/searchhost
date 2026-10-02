@@ -74,7 +74,12 @@ async def main():
             connection_retries=CONNECTION_RETRIES,
             retry_delay=RETRY_DELAY_SECONDS,
         )
-        await client.connect()
+        try:
+            await client.connect()
+        except Exception as e:
+            print(f"[{phone}] Gagal connect: {e}")
+            await client.disconnect()
+            continue
         if not await client.is_user_authorized():
             print(f"Session {phone} tidak valid/expired, lewati. Login ulang lewat `python main.py`.")
             await client.disconnect()
