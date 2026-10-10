@@ -5,6 +5,43 @@
 {% block content %}
 <div class="card mb-3">
   <div class="card-header">
+    <span><i class="bi bi-hdd-fill me-2 text-danger"></i>Disk Space Guard</span>
+    <span class="badge {{ 'text-bg-success' if disk_guard_enabled else 'text-bg-secondary' }}">
+      {{ 'Aktif' if disk_guard_enabled else 'Nonaktif' }}
+    </span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/settings/disk-guard">
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch"
+               id="disk-guard-toggle" name="enabled" value="1"
+               {{ 'checked' if disk_guard_enabled else '' }}>
+        <label class="form-check-label" for="disk-guard-toggle">
+          Pause download otomatis kalau disk hampir penuh -- {{ 'Aktif' if disk_guard_enabled else 'Nonaktif' }}
+        </label>
+      </div>
+      <div class="mb-3">
+        <label for="disk-guard-min-free-gb" class="form-label">
+          Minimal sisa ruang disk (GB)
+        </label>
+        <input type="number" class="form-control" id="disk-guard-min-free-gb"
+               name="min_free_gb" value="{{ disk_guard_min_free_gb }}"
+               min="0.5" step="0.5" style="max-width: 200px;">
+        <div class="form-text">
+          Kalau sisa ruang disk turun di bawah angka ini, download baru otomatis
+          di-pause (yang sedang jalan tetap lanjut). Begitu auto-parse + auto-delete
+          membebaskan cukup ruang, download lanjut lagi otomatis.
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="bi bi-save"></i> Simpan
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
     <span><i class="bi bi-fingerprint me-2 text-primary"></i>Deteksi File Duplikat</span>
   </div>
   <div class="card-body">

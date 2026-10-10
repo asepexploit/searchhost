@@ -228,6 +228,25 @@
       .catch(() => {});
   }
 
+  function handleDiskGuardStatus(item) {
+    const banner = document.getElementById("disk-guard-banner");
+    if (!banner) return;
+    banner.hidden = !item.paused;
+    if (item.paused) {
+      const freeGB = (item.free_bytes / 1024 / 1024 / 1024).toFixed(1);
+      const threshGB = (item.threshold_bytes / 1024 / 1024 / 1024).toFixed(1);
+      const detail = document.getElementById("disk-guard-detail");
+      if (detail) detail.textContent = ` (Sisa: ${freeGB} GB, batas minimal: ${threshGB} GB) `;
+    }
+  }
+
+  function fetchDiskGuardStatus() {
+    fetch("/api/disk-guard-status")
+      .then((r) => r.json())
+      .then((data) => handleDiskGuardStatus(data))
+      .catch(() => {});
+  }
+
   function handleProgressError(item) {
     activeDownloads.delete(item.progress_id);
     renderActiveDownloads();
@@ -375,6 +394,10 @@
       }
       if (item.type === "queue_status") {
         handleQueueStatus(item);
+        return;
+      }
+      if (item.type === "disk_guard_status") {
+        handleDiskGuardStatus(item);
         return;
       }
       if (item.type === "auto_parser_batch") {
@@ -724,6 +747,7 @@
     setupLiveClock();
     setupGofileLogClear();
     fetchQueueStatus();
+    fetchDiskGuardStatus();
     fetchAutoParserStatus();
     if (document.querySelector(".bot-search-countdown")) {
       tickBotSearchCountdowns();
