@@ -100,12 +100,11 @@
       </header>
 
       <main class="content">
-        <div id="disk-guard-banner" class="alert alert-danger mb-3 d-flex align-items-center" hidden>
-          <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <div id="disk-guard-banner" class="alert mb-3 d-flex align-items-center" hidden>
+          <i id="disk-guard-icon" class="me-2 fs-5"></i>
           <div>
-            <strong>Download di-pause: disk hampir penuh!</strong>
+            <strong id="disk-guard-title"></strong>
             <span id="disk-guard-detail"></span>
-            Menunggu auto-parse + auto-delete membebaskan ruang...
           </div>
         </div>
         <div id="active-downloads-card" class="card mb-3 active-downloads-card" hidden>

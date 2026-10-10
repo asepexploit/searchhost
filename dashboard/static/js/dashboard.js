@@ -231,12 +231,25 @@
   function handleDiskGuardStatus(item) {
     const banner = document.getElementById("disk-guard-banner");
     if (!banner) return;
-    banner.hidden = !item.paused;
+    if (!item.total_bytes) { banner.hidden = true; return; }
+    banner.hidden = false;
+    const freeGB = (item.free_bytes / 1024 / 1024 / 1024).toFixed(1);
+    const totalGB = (item.total_bytes / 1024 / 1024 / 1024).toFixed(1);
+    const threshGB = (item.threshold_bytes / 1024 / 1024 / 1024).toFixed(1);
+    const disk = item.disk_path || "?";
+    const icon = document.getElementById("disk-guard-icon");
+    const title = document.getElementById("disk-guard-title");
+    const detail = document.getElementById("disk-guard-detail");
     if (item.paused) {
-      const freeGB = (item.free_bytes / 1024 / 1024 / 1024).toFixed(1);
-      const threshGB = (item.threshold_bytes / 1024 / 1024 / 1024).toFixed(1);
-      const detail = document.getElementById("disk-guard-detail");
-      if (detail) detail.textContent = ` (Sisa: ${freeGB} GB, batas minimal: ${threshGB} GB) `;
+      banner.className = "alert alert-danger mb-3 d-flex align-items-center";
+      if (icon) icon.className = "bi bi-exclamation-triangle-fill me-2 fs-5";
+      if (title) title.textContent = "Download di-pause: disk hampir penuh! ";
+      if (detail) detail.textContent = `Drive ${disk} — Sisa: ${freeGB} GB / ${totalGB} GB (batas minimal: ${threshGB} GB). Menunggu auto-parse + auto-delete membebaskan ruang...`;
+    } else {
+      banner.className = "alert alert-info mb-3 d-flex align-items-center";
+      if (icon) icon.className = "bi bi-hdd me-2 fs-5";
+      if (title) title.textContent = "Disk Space Guard: ";
+      if (detail) detail.textContent = `Drive ${disk} — Sisa: ${freeGB} GB / ${totalGB} GB (batas minimal: ${threshGB} GB)`;
     }
   }
 
